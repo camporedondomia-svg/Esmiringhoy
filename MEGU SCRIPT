@@ -1,0 +1,532 @@
+
+-- MTX CLIENT | Roblox Studio training UI
+-- Place in StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local settings = {
+    Camlock = false,
+    Spin = false,
+    Fly = false,
+    Speed = false,
+    AutoSpam = false,
+    WalkSpeed = 28,
+    FlySpeed = 45,
+    SpinSpeed = 12,
+    Smoothness = 0.18,
+    SpamInterval = 0.25,
+
+    CamlockKey = Enum.KeyCode.E,
+    SpinKey = Enum.KeyCode.R,
+    FlyKey = Enum.KeyCode.F,
+    SpeedKey = Enum.KeyCode.V,
+    SpamKey = Enum.KeyCode.G,
+}
+
+local PURPLE = Color3.fromRGB(139, 92, 246)
+local BG = Color3.fromRGB(18, 19, 28)
+local ITEM = Color3.fromRGB(31, 32, 45)
+local WHITE = Color3.fromRGB(245, 245, 255)
+local MUTED = Color3.fromRGB(165, 167, 185)
+
+local old = playerGui:FindFirstChild("MTXClient")
+if old then old:Destroy() end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "MTXClient"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+local main = Instance.new("Frame")
+main.Size = UDim2.fromOffset(510, 410)
+main.Position = UDim2.new(0.5, -255, 0.5, -205)
+main.BackgroundColor3 = BG
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local function corner(obj, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius)
+    c.Parent = obj
+end
+
+corner(main, 12)
+
+local outline = Instance.new("UIStroke")
+outline.Color = PURPLE
+outline.Transparency = 0.35
+outline.Parent = main
+
+local top = Instance.new("Frame")
+top.Size = UDim2.new(1, 0, 0, 48)
+top.BackgroundColor3 = Color3.fromRGB(25, 24, 37)
+top.BorderSizePixel = 0
+top.Active = true
+top.Parent = main
+corner(top, 12)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -65, 1, 0)
+title.Position = UDim2.fromOffset(15, 0)
+title.BackgroundTransparency = 1
+title.Text = "MTX  /  CLIENT"
+title.TextColor3 = WHITE
+title.TextSize = 17
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = top
+
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(34, 30)
+minimize.Position = UDim2.new(1, -43, 0, 9)
+minimize.BackgroundColor3 = ITEM
+minimize.TextColor3 = WHITE
+minimize.Text = "—"
+minimize.Font = Enum.Font.GothamBold
+minimize.TextSize = 18
+minimize.Parent = top
+corner(minimize, 8)
+
+local body = Instance.new("Frame")
+body.Position = UDim2.fromOffset(12, 60)
+body.Size = UDim2.new(1, -24, 1, -72)
+body.BackgroundTransparency = 1
+body.Parent = main
+
+-- Draggable title bar
+local dragging = false
+local dragStart, startPos
+
+top.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+local minimized = false
+minimize.Activated:Connect(function()
+    minimized = not minimized
+    body.Visible = not minimized
+    main.Size = minimized
+        and UDim2.fromOffset(510, 48)
+        or UDim2.fromOffset(510, 410)
+    minimize.Text = minimized and "+" or "—"
+end)
+
+-- Sidebar and content
+local sidebar = Instance.new("Frame")
+sidebar.Size = UDim2.new(0, 145, 1, 0)
+sidebar.BackgroundTransparency = 1
+sidebar.Parent = body
+
+local sideLayout = Instance.new("UIListLayout")
+sideLayout.Padding = UDim.new(0, 7)
+sideLayout.Parent = sidebar
+
+local content = Instance.new("ScrollingFrame")
+content.Position = UDim2.fromOffset(155, 0)
+content.Size = UDim2.new(1, -155, 1, 0)
+content.BackgroundColor3 = Color3.fromRGB(23, 24, 34)
+content.BorderSizePixel = 0
+content.ScrollBarThickness = 3
+content.ScrollBarImageColor3 = PURPLE
+content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+content.CanvasSize = UDim2.new()
+content.Parent = body
+corner(content, 9)
+
+local padding = Instance.new("UIPadding")
+padding.PaddingTop = UDim.new(0, 10)
+padding.PaddingLeft = UDim.new(0, 10)
+padding.PaddingRight = UDim.new(0, 10)
+padding.PaddingBottom = UDim.new(0, 10)
+padding.Parent = content
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 8)
+layout.Parent = content
+
+local function clear()
+    for _, child in ipairs(content:GetChildren()) do
+        if child ~= padding and child ~= layout then
+            child:Destroy()
+        end
+    end
+end
+
+local function heading(text)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -4, 0, 28)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = WHITE
+    label.TextSize = 15
+    label.Font = Enum.Font.GothamBold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = content
+    return label
+end
+
+local function button(text, callback)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -4, 0, 36)
+    b.BackgroundColor3 = ITEM
+    b.TextColor3 = WHITE
+    b.TextSize = 12
+    b.Font = Enum.Font.GothamMedium
+    b.Text = text
+    b.Parent = content
+    corner(b, 7)
+    b.Activated:Connect(callback)
+    return b
+end
+
+local function toggle(label, key)
+    local b
+    local function refresh()
+        b.Text = label .. "     " ..
+            (settings[key] and "[ ON ]" or "[ OFF ]")
+        b.TextColor3 = settings[key] and PURPLE or MUTED
+    end
+
+    b = button("", function()
+        settings[key] = not settings[key]
+        refresh()
+    end)
+    refresh()
+end
+
+local function keybind(label, key)
+    local waiting = false
+    local b
+
+    local function refresh()
+        b.Text = label .. "   [ " .. settings[key].Name .. " ]"
+    end
+
+    b = button("", function()
+        waiting = true
+        b.Text = label .. "   [ Press a key ]"
+    end)
+    refresh()
+
+    UIS.InputBegan:Connect(function(input, processed)
+        if not waiting or processed then return end
+        if input.UserInputType ~= Enum.UserInputType.Keyboard then
+            return
+        end
+        settings[key] = input.KeyCode
+        waiting = false
+        refresh()
+    end)
+end
+
+-- Find a training dummy named TrainingDummy in Workspace.
+local function getDummy()
+    local dummy = workspace:FindFirstChild("TrainingDummy")
+    if not dummy then return nil end
+    return dummy:FindFirstChild("HumanoidRootPart")
+        or dummy:FindFirstChild("Head")
+end
+
+-- Runtime state
+local camera = workspace.CurrentCamera
+local flyAttachment
+local flyVelocity
+local flyOrientation
+local originalSpeed
+local lastSpam = 0
+local lastCharacter
+
+local function getCharacter()
+    return player.Character
+end
+
+local function getHumanoid()
+    local char = getCharacter()
+    return char and char:FindFirstChildOfClass("Humanoid")
+end
+
+local function stopFly()
+    if flyVelocity then flyVelocity:Destroy() flyVelocity = nil end
+    if flyOrientation then
+        flyOrientation:Destroy()
+        flyOrientation = nil
+    end
+    if flyAttachment then
+        flyAttachment:Destroy()
+        flyAttachment = nil
+    end
+end
+
+local function startFly(root)
+    stopFly()
+
+    flyAttachment = Instance.new("Attachment")
+    flyAttachment.Name = "MTXFlyAttachment"
+    flyAttachment.Parent = root
+
+    flyVelocity = Instance.new("LinearVelocity")
+    flyVelocity.Name = "MTXFlyVelocity"
+    flyVelocity.Attachment0 = flyAttachment
+    flyVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
+    flyVelocity.VelocityConstraintMode =
+        Enum.VelocityConstraintMode.Vector
+    flyVelocity.VectorVelocity = Vector3.zero
+    flyVelocity.MaxForce = 100000
+    flyVelocity.Parent = root
+
+    flyOrientation = Instance.new("AlignOrientation")
+    flyOrientation.Attachment0 = flyAttachment
+    flyOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+    flyOrientation.MaxTorque = 100000
+    flyOrientation.Responsiveness = 15
+    flyOrientation.Parent = root
+end
+
+local function updateFly(root)
+    if not flyVelocity or not camera then return end
+
+    local direction = Vector3.zero
+    local look = camera.CFrame.LookVector
+    local right = camera.CFrame.RightVector
+
+    if UIS:IsKeyDown(Enum.KeyCode.W) then direction += look end
+    if UIS:IsKeyDown(Enum.KeyCode.S) then direction -= look end
+    if UIS:IsKeyDown(Enum.KeyCode.D) then direction += right end
+    if UIS:IsKeyDown(Enum.KeyCode.A) then direction -= right end
+    if UIS:IsKeyDown(Enum.KeyCode.Space) then
+        direction += Vector3.yAxis
+    end
+    if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+        direction -= Vector3.yAxis
+    end
+
+    if direction.Magnitude > 0 then
+        direction = direction.Unit
+    end
+
+    flyVelocity.VectorVelocity = direction * settings.FlySpeed
+    flyOrientation.CFrame = camera.CFrame.Rotation
+end
+
+local function showTab(tab)
+    clear()
+
+    if tab == "Combat" then
+        heading("Training Camera")
+        toggle("Smooth Camlock (TrainingDummy)", "Camlock")
+        heading("Visual Effects")
+        toggle("Character Spin", "Spin")
+        heading("Movement")
+        toggle("Fly", "Fly")
+        toggle("Speed", "Speed")
+        heading("Testing")
+        toggle("Auto Spam (local test log)", "AutoSpam")
+        button("Print test action", function()
+            print("MTX test action executed.")
+        end)
+
+    elseif tab == "Settings" then
+        heading("Movement Settings")
+        button("Walk Speed: " .. settings.WalkSpeed, function()
+            settings.WalkSpeed =
+                settings.WalkSpeed >= 60 and 16
+                or settings.WalkSpeed + 4
+            showTab("Settings")
+        end)
+        button("Fly Speed: " .. settings.FlySpeed, function()
+            settings.FlySpeed =
+                settings.FlySpeed >= 85 and 25
+                or settings.FlySpeed + 10
+            showTab("Settings")
+        end)
+        button("Spin Speed: " .. settings.SpinSpeed, function()
+            settings.SpinSpeed =
+                settings.SpinSpeed >= 30 and 5
+                or settings.SpinSpeed + 5
+            showTab("Settings")
+        end)
+        button("Cam Smoothness: " ..
+            string.format("%.2f", settings.Smoothness), function()
+            settings.Smoothness =
+                settings.Smoothness >= 0.5 and 0.05
+                or settings.Smoothness + 0.05
+            showTab("Settings")
+        end)
+
+    elseif tab == "Keys" then
+        heading("Toggle Keybinds")
+        keybind("Camlock", "CamlockKey")
+        keybind("Spin", "SpinKey")
+        keybind("Fly", "FlyKey")
+        keybind("Speed", "SpeedKey")
+        keybind("Auto Spam", "SpamKey")
+        heading("WASD + Space/Ctrl control flight")
+
+    else
+        heading("Welcome to MTX")
+        local info = Instance.new("TextLabel")
+        info.Size = UDim2.new(1, -4, 0, 65)
+        info.BackgroundTransparency = 1
+        info.Text = "Studio training UI\nTarget: Workspace.TrainingDummy\nAll test actions are local."
+        info.TextColor3 = MUTED
+        info.TextSize = 12
+        info.Font = Enum.Font.Gotham
+        info.TextWrapped = true
+        info.TextXAlignment = Enum.TextXAlignment.Left
+        info.Parent = content
+
+        button("Reset UI Position", function()
+            main.Position = UDim2.new(0.5, -255, 0.5, -205)
+        end)
+        button("Reset Settings", function()
+            settings.Camlock = false
+            settings.Spin = false
+            settings.Fly = false
+            settings.Speed = false
+            settings.AutoSpam = false
+            settings.WalkSpeed = 28
+            settings.FlySpeed = 45
+            settings.SpinSpeed = 12
+            settings.Smoothness = 0.18
+            settings.SpamInterval = 0.25
+            showTab("Home")
+        end)
+    end
+end
+
+local tabs = {"Home", "Combat", "Settings", "Keys"}
+
+for _, name in ipairs(tabs) do
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, 0, 0, 36)
+    b.BackgroundColor3 = ITEM
+    b.Text = name
+    b.TextColor3 = WHITE
+    b.TextSize = 13
+    b.Font = Enum.Font.GothamMedium
+    b.Parent = sidebar
+    corner(b, 8)
+
+    b.Activated:Connect(function()
+        for _, sibling in ipairs(sidebar:GetChildren()) do
+            if sibling:IsA("TextButton") then
+                sibling.BackgroundColor3 = ITEM
+            end
+        end
+        b.BackgroundColor3 = PURPLE
+        showTab(name)
+    end)
+end
+
+-- Keyboard toggles
+UIS.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then
+        return
+    end
+
+    local key = input.KeyCode
+    if key == settings.CamlockKey then
+        settings.Camlock = not settings.Camlock
+    elseif key == settings.SpinKey then
+        settings.Spin = not settings.Spin
+    elseif key == settings.FlyKey then
+        settings.Fly = not settings.Fly
+    elseif key == settings.SpeedKey then
+        settings.Speed = not settings.Speed
+    elseif key == settings.SpamKey then
+        settings.AutoSpam = not settings.AutoSpam
+    end
+end)
+
+-- Main update loop
+RunService.RenderStepped:Connect(function(dt)
+    local char = getCharacter()
+    local humanoid = getHumanoid()
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not root then return end
+
+    if char ~= lastCharacter then
+        stopFly()
+        lastCharacter = char
+        originalSpeed = humanoid.WalkSpeed
+    end
+
+    if settings.Speed then
+        humanoid.WalkSpeed = settings.WalkSpeed
+    elseif originalSpeed then
+        humanoid.WalkSpeed = originalSpeed
+    end
+
+    if settings.Fly then
+        humanoid.PlatformStand = true
+        if not flyVelocity then startFly(root) end
+        updateFly(root)
+    else
+        if flyVelocity then stopFly() end
+        humanoid.PlatformStand = false
+    end
+
+    if settings.Spin then
+        root.AssemblyAngularVelocity = Vector3.new(
+            0, settings.SpinSpeed, 0
+        )
+    end
+
+    if settings.Camlock and camera then
+        local target = getDummy()
+        if target then
+            local desired = CFrame.lookAt(
+                camera.CFrame.Position, target.Position
+            )
+            camera.CFrame = camera.CFrame:Lerp(
+                desired, math.clamp(settings.Smoothness, 0, 1)
+            )
+        end
+    end
+
+    if settings.AutoSpam and os.clock() - lastSpam >= settings.SpamInterval then
+        lastSpam = os.clock()
+        print("MTX local test spam:", os.clock())
+    end
+end)
+
+-- Restore camera and movement on script removal.
+gui.Destroying:Connect(function()
+    stopFly()
+    local humanoid = getHumanoid()
+    if humanoid then
+        humanoid.PlatformStand = false
+        if originalSpeed then humanoid.WalkSpeed = originalSpeed end
+    end
+end)

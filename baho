@@ -1,0 +1,239 @@
+
+-- Dark Purple GUI | Roblox Studio
+-- Place inside a LocalScript in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "PurpleDashboard"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local purple = Color3.fromRGB(139, 92, 246)
+local bg = Color3.fromRGB(17, 17, 25)
+local panel = Color3.fromRGB(25, 25, 37)
+local white = Color3.fromRGB(240, 240, 250)
+
+local main = Instance.new("Frame")
+main.Size = UDim2.fromOffset(570, 365)
+main.Position = UDim2.new(0.5, -285, 0.5, -182)
+main.BackgroundColor3 = bg
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local corner = Instance.new("UICorner", main)
+corner.CornerRadius = UDim.new(0, 12)
+
+local stroke = Instance.new("UIStroke", main)
+stroke.Color = purple
+stroke.Transparency = 0.25
+
+local top = Instance.new("Frame")
+top.Size = UDim2.new(1, 0, 0, 48)
+top.BackgroundColor3 = panel
+top.BorderSizePixel = 0
+top.Parent = main
+Instance.new("UICorner", top).CornerRadius = UDim.new(0, 12)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -100, 1, 0)
+title.Position = UDim2.fromOffset(16, 0)
+title.BackgroundTransparency = 1
+title.Text = "◆  PURPLE  |  Dashboard"
+title.TextColor3 = white
+title.TextSize = 17
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = top
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(32, 30)
+close.Position = UDim2.new(1, -40, 0, 9)
+close.BackgroundColor3 = Color3.fromRGB(190, 65, 85)
+close.Text = "×"
+close.TextColor3 = white
+close.TextSize = 22
+close.Font = Enum.Font.GothamBold
+close.Parent = top
+Instance.new("UICorner", close).CornerRadius = UDim.new(0, 8)
+close.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(32, 30)
+minimize.Position = UDim2.new(1, -78, 0, 9)
+minimize.BackgroundColor3 = Color3.fromRGB(60, 52, 80)
+minimize.Text = "−"
+minimize.TextColor3 = white
+minimize.TextSize = 22
+minimize.Parent = top
+Instance.new("UICorner", minimize).CornerRadius = UDim.new(0, 8)
+
+local sidebar = Instance.new("Frame")
+sidebar.Position = UDim2.fromOffset(12, 60)
+sidebar.Size = UDim2.new(0, 145, 1, -72)
+sidebar.BackgroundColor3 = panel
+sidebar.BorderSizePixel = 0
+sidebar.Parent = main
+Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, 10)
+
+local content = Instance.new("Frame")
+content.Position = UDim2.fromOffset(169, 60)
+content.Size = UDim2.new(1, -181, 1, -72)
+content.BackgroundTransparency = 1
+content.Parent = main
+
+local heading = Instance.new("TextLabel")
+heading.Size = UDim2.new(1, 0, 0, 34)
+heading.BackgroundTransparency = 1
+heading.Text = "Main Settings"
+heading.TextColor3 = white
+heading.TextSize = 19
+heading.Font = Enum.Font.GothamBold
+heading.TextXAlignment = Enum.TextXAlignment.Left
+heading.Parent = content
+
+local function makeButton(parent, text, y)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -12, 0, 36)
+    b.Position = UDim2.fromOffset(6, y)
+    b.BackgroundColor3 = panel
+    b.Text = text
+    b.TextColor3 = white
+    b.TextSize = 13
+    b.Font = Enum.Font.GothamMedium
+    b.Parent = parent
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+    return b
+end
+
+local body = Instance.new("Frame")
+body.Position = UDim2.fromOffset(0, 42)
+body.Size = UDim2.new(1, 0, 1, -42)
+body.BackgroundTransparency = 1
+body.Parent = content
+
+local function clearBody()
+    for _, child in ipairs(body:GetChildren()) do
+        child:Destroy()
+    end
+end
+
+local function addToggle(label, y, callback)
+    local row = Instance.new("Frame")
+    row.Position = UDim2.fromOffset(0, y)
+    row.Size = UDim2.new(1, 0, 0, 43)
+    row.BackgroundColor3 = panel
+    row.BorderSizePixel = 0
+    row.Parent = body
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+
+    local text = Instance.new("TextLabel")
+    text.Position = UDim2.fromOffset(12, 0)
+    text.Size = UDim2.new(1, -75, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Text = label
+    text.TextColor3 = white
+    text.TextSize = 13
+    text.Font = Enum.Font.Gotham
+    text.TextXAlignment = Enum.TextXAlignment.Left
+    text.Parent = row
+
+    local on = false
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.fromOffset(42, 23)
+    button.Position = UDim2.new(1, -54, 0.5, -11)
+    button.BackgroundColor3 = Color3.fromRGB(65, 65, 80)
+    button.Text = "OFF"
+    button.TextColor3 = white
+    button.TextSize = 10
+    button.Font = Enum.Font.GothamBold
+    button.Parent = row
+    Instance.new("UICorner", button).CornerRadius = UDim.new(1, 0)
+
+    button.MouseButton1Click:Connect(function()
+        on = not on
+        button.Text = on and "ON" or "OFF"
+        button.BackgroundColor3 = on and purple
+            or Color3.fromRGB(65, 65, 80)
+        if callback then callback(on) end
+    end)
+end
+
+local function showMain()
+    clearBody()
+    addToggle("Enable Feature 1", 4)
+    addToggle("Enable Feature 2", 54)
+    addToggle("Enable Feature 3", 104)
+
+    local info = Instance.new("TextLabel")
+    info.Position = UDim2.fromOffset(4, 164)
+    info.Size = UDim2.new(1, -8, 0, 50)
+    info.BackgroundTransparency = 1
+    info.Text = "Purple UI  •  Customize these controls\nConnect each toggle to your own game logic."
+    info.TextColor3 = Color3.fromRGB(165, 160, 185)
+    info.TextSize = 11
+    info.Font = Enum.Font.Gotham
+    info.TextWrapped = true
+    info.Parent = body
+end
+
+local function showSettings()
+    clearBody()
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 70)
+    label.BackgroundTransparency = 1
+    label.Text = "Settings\n\nCustomize your own game features here."
+    label.TextColor3 = white
+    label.TextSize = 15
+    label.Font = Enum.Font.Gotham
+    label.TextWrapped = true
+    label.Parent = body
+end
+
+makeButton(sidebar, "◆  Main", 14).MouseButton1Click:Connect(showMain)
+makeButton(sidebar, "⚙  Settings", 58).MouseButton1Click:Connect(showSettings)
+
+local minimized = false
+minimize.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    sidebar.Visible = not minimized
+    content.Visible = not minimized
+    main.Size = minimized
+        and UDim2.fromOffset(570, 48)
+        or UDim2.fromOffset(570, 365)
+    minimize.Text = minimized and "+" or "−"
+end)
+
+-- Drag window using the title bar
+local dragging = false
+local dragStart, startPos
+
+top.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+showMain()

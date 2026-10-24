@@ -1,0 +1,129 @@
+
+-- PURPLE GUI: AUTO PLAYER LIST
+-- Place in StarterPlayer > StarterPlayerScripts
+-- Use as a LocalScript in your own Roblox game.
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local old = playerGui:FindFirstChild("PurplePlayerGUI")
+if old then old:Destroy() end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "PurplePlayerGUI"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+local purple = Color3.fromRGB(145, 85, 255)
+local bg = Color3.fromRGB(19, 18, 29)
+local panel = Color3.fromRGB(34, 31, 48)
+local white = Color3.fromRGB(245, 240, 255)
+
+local main = Instance.new("Frame")
+main.Size = UDim2.fromOffset(360, 400)
+main.Position = UDim2.new(0.5, -180, 0.5, -200)
+main.BackgroundColor3 = bg
+main.BorderSizePixel = 0
+main.Parent = gui
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+
+local outline = Instance.new("UIStroke", main)
+outline.Color = purple
+outline.Thickness = 1.5
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -20, 0, 45)
+title.Position = UDim2.fromOffset(15, 0)
+title.BackgroundTransparency = 1
+title.Text = "PURPLE  /  PLAYER SELECT"
+title.TextColor3 = purple
+title.TextSize = 17
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = main
+
+local selected = Instance.new("TextLabel")
+selected.Position = UDim2.fromOffset(15, 43)
+selected.Size = UDim2.new(1, -30, 0, 30)
+selected.BackgroundColor3 = panel
+selected.Text = "Selected: None"
+selected.TextColor3 = white
+selected.TextSize = 13
+selected.Font = Enum.Font.Gotham
+selected.Parent = main
+
+Instance.new("UICorner", selected).CornerRadius =
+    UDim.new(0, 6)
+
+local list = Instance.new("ScrollingFrame")
+list.Position = UDim2.fromOffset(15, 83)
+list.Size = UDim2.new(1, -30, 1, -98)
+list.BackgroundColor3 = Color3.fromRGB(24, 22, 36)
+list.BorderSizePixel = 0
+list.ScrollBarThickness = 5
+list.ScrollBarImageColor3 = purple
+list.CanvasSize = UDim2.new(0, 0, 0, 0)
+list.Parent = main
+
+Instance.new("UICorner", list).CornerRadius = UDim.new(0, 8)
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 6)
+layout.SortOrder = Enum.SortOrder.Name
+layout.Parent = list
+
+local function refresh()
+    for _, child in ipairs(list:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    local available = {}
+
+    for _, other in ipairs(Players:GetPlayers()) do
+        if other ~= player then
+            table.insert(available, other)
+        end
+    end
+
+    table.sort(available, function(a, b)
+        return a.Name:lower() < b.Name:lower()
+    end)
+
+    for _, other in ipairs(available) do
+        local button = Instance.new("TextButton")
+        button.Name = other.Name
+        button.Size = UDim2.new(1, -10, 0, 38)
+        button.BackgroundColor3 = panel
+        button.TextColor3 = white
+        button.TextSize = 13
+        button.Font = Enum.Font.GothamMedium
+        button.Text = other.DisplayName .. "  (@" .. other.Name .. ")"
+        button.Parent = list
+
+        Instance.new("UICorner", button).CornerRadius =
+            UDim.new(0, 6)
+
+        button.Activated:Connect(function()
+            if other.Parent ~= Players then
+                selected.Text = "Player has left the server"
+                return
+            end
+
+            selected.Text = "Selected: @" .. other.Name
+            print("Selected player:", other.Name)
+        end)
+    end
+
+    list.CanvasSize = UDim2.new(
+        0, 0, 0, #available * 44 + 6
+    )
+end
+
+Players.PlayerAdded:Connect(refresh)
+Players.PlayerRemoving:Connect(refresh)
+
+refresh()

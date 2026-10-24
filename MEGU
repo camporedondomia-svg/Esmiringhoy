@@ -1,0 +1,40 @@
+getgenv().MTXClient_Settings = {
+    ["Aim"] = {
+       ["AimPart"] = "Head",
+       ["AimlockKey"] = "e",
+       ["AimRadius"] = 100,
+    }, 
+
+    ["ClientFly"] = {
+        ["Enabled"] = false,
+        ["Keybind"] = Enum.KeyCode.X,
+        ["Speed"] = 30,
+    }, 
+
+    ["Speed"] = {
+        ["Enabled"] = false,
+        ["Keybind"] = Enum.KeyCode.Z,
+        ["amount"] = 10,
+    }, 
+
+    ["Verifications"] = {
+        ["ThirdPerson"] = true,
+        ["FirstPerson"] = true,
+        ["TeamCheck"] = false,
+
+        ["K_O"] = true,
+        ["Grabing"] = true,
+    },
+
+    ["Utility"] = {
+        ["NoSlow"] = true,
+        ["AntiGroundShots"] = true,
+    },
+
+    ["Predict"] = {
+        ["PredictMovement"] = false,
+        ["PredictionVelocity"] = 7,
+    },
+};
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/MTXClient/MTX-Client/refs/heads/main/Games/DH.lua"))()

@@ -1,0 +1,228 @@
+
+-- PURPLE CONTROL PANEL V2
+-- Put this LocalScript in StarterPlayerScripts
+-- For your own Roblox Studio game.
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local old = playerGui:FindFirstChild("PurpleControlPanel")
+if old then old:Destroy() end
+
+local purple = Color3.fromRGB(155, 90, 255)
+local bg = Color3.fromRGB(19, 17, 29)
+local panel = Color3.fromRGB(35, 31, 49)
+local white = Color3.fromRGB(245, 240, 255)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "PurpleControlPanel"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+local main = Instance.new("Frame")
+main.Size = UDim2.fromOffset(390, 440)
+main.Position = UDim2.new(0.5, -195, 0.5, -220)
+main.BackgroundColor3 = bg
+main.BorderSizePixel = 0
+main.Parent = gui
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+
+local outline = Instance.new("UIStroke", main)
+outline.Color = purple
+outline.Thickness = 1.5
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -55, 0, 45)
+title.Position = UDim2.fromOffset(15, 0)
+title.BackgroundTransparency = 1
+title.Text = "PURPLE / CONTROL PANEL"
+title.TextColor3 = purple
+title.Font = Enum.Font.GothamBold
+title.TextSize = 17
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = main
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(30, 30)
+close.Position = UDim2.new(1, -40, 0, 8)
+close.Text = "X"
+close.TextColor3 = white
+close.BackgroundColor3 = Color3.fromRGB(90, 40, 110)
+close.Parent = main
+Instance.new("UICorner", close).CornerRadius = UDim.new(0, 7)
+
+local status = Instance.new("TextLabel")
+status.Position = UDim2.fromOffset(15, 45)
+status.Size = UDim2.new(1, -30, 0, 28)
+status.BackgroundColor3 = panel
+status.Text = "Target: None"
+status.TextColor3 = white
+status.Font = Enum.Font.Gotham
+status.TextSize = 12
+status.Parent = main
+Instance.new("UICorner", status).CornerRadius = UDim.new(0, 6)
+
+local list = Instance.new("ScrollingFrame")
+list.Position = UDim2.fromOffset(15, 82)
+list.Size = UDim2.new(1, -30, 0, 145)
+list.BackgroundColor3 = Color3.fromRGB(24, 22, 36)
+list.BorderSizePixel = 0
+list.ScrollBarThickness = 4
+list.ScrollBarImageColor3 = purple
+list.CanvasSize = UDim2.new()
+list.Parent = main
+Instance.new("UICorner", list).CornerRadius = UDim.new(0, 7)
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 5)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = list
+
+local selectedPlayer = nil
+local toggles = {}
+local connections = {}
+local spinConnection = nil
+local spinEnabled = false
+local angle = 0
+
+local function addToggle(name, y, callback)
+    local button = Instance.new("TextButton")
+    button.Position = UDim2.fromOffset(15, y)
+    button.Size = UDim2.new(1, -30, 0, 36)
+    button.BackgroundColor3 = panel
+    button.Text = name .. "   [ OFF ]"
+    button.TextColor3 = white
+    button.Font = Enum.Font.GothamMedium
+    button.TextSize = 13
+    button.Parent = main
+    Instance.new("UICorner", button).CornerRadius =
+        UDim.new(0, 7)
+
+    toggles[name] = false
+
+    button.Activated:Connect(function()
+        toggles[name] = not toggles[name]
+        local on = toggles[name]
+
+        button.Text = name .. (on and "   [ ON ]" or "   [ OFF ]")
+        button.BackgroundColor3 = on and purple or panel
+
+        if callback then callback(on) end
+    end)
+end
+
+local function refreshPlayers()
+    for _, child in ipairs(list:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    local others = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player then
+            table.insert(others, p)
+        end
+    end
+
+    table.sort(others, function(a, b)
+        return a.Name:lower() < b.Name:lower()
+    end)
+
+    for i, p in ipairs(others) do
+        local button = Instance.new("TextButton")
+        button.LayoutOrder = i
+        button.Size = UDim2.new(1, -8, 0, 32)
+        button.BackgroundColor3 = panel
+        button.Text = p.DisplayName .. "  (@" .. p.Name .. ")"
+        button.TextColor3 = white
+        button.Font = Enum.Font.Gotham
+        button.TextSize = 12
+        button.Parent = list
+        Instance.new("UICorner", button).CornerRadius =
+            UDim.new(0, 6)
+
+        button.Activated:Connect(function()
+            if p.Parent ~= Players then
+                return
+            end
+
+            selectedPlayer = p
+            status.Text = "Target: @" .. p.Name
+
+            for _, item in ipairs(list:GetChildren()) do
+                if item:IsA("TextButton") then
+                    item.BackgroundColor3 = panel
+                end
+            end
+            button.BackgroundColor3 = purple
+        end)
+    end
+
+    list.CanvasSize = UDim2.fromOffset(0, #others * 37)
+end
+
+table.insert(connections, Players.PlayerAdded:Connect(refreshPlayers))
+table.insert(connections, Players.PlayerRemoving:Connect(function(p)
+    if selectedPlayer == p then
+        selectedPlayer = nil
+        status.Text = "Target: None"
+    end
+    refreshPlayers()
+end))
+
+-- Spin your own character in your own game.
+addToggle("Spin Character", 238, function(on)
+    spinEnabled = on
+
+    if on then
+        if spinConnection then spinConnection:Disconnect() end
+
+        spinConnection = RunService.Heartbeat:Connect(function(dt)
+            local character = player.Character
+            local root = character and character:FindFirstChild("HumanoidRootPart")
+            if root then
+                angle = (angle + dt * 4) % (math.pi * 2)
+                root.CFrame = CFrame.new(root.Position)
+                    * CFrame.Angles(0, angle, 0)
+            end
+        end)
+    elseif spinConnection then
+        spinConnection:Disconnect()
+        spinConnection = nil
+    end
+end)
+
+-- Demo toggle: connect to your own server-authorized reload system.
+addToggle("Auto Reload (Demo)", 281, function(on)
+    status.Text = on
+        and "Reload demo enabled"
+        or "Target: " .. (selectedPlayer and "@" .. selectedPlayer.Name or "None")
+end)
+
+addToggle("Auto Kill (Unavailable)", 324, function(on)
+    toggles["Auto Kill (Unavailable)"] = false
+    status.Text = "Use authorized combat mechanics in your own game"
+end)
+
+addToggle("Auto Stomp (Unavailable)", 367, function(on)
+    toggles["Auto Stomp (Unavailable)"] = false
+    status.Text = "Use authorized gameplay mechanics in your own game"
+end)
+
+close.Activated:Connect(function()
+    if spinConnection then
+        spinConnection:Disconnect()
+    end
+    for _, connection in ipairs(connections) do
+        connection:Disconnect()
+    end
+    gui:Destroy()
+end)
+
+refreshPlayers()
+print("Purple Control Panel loaded")

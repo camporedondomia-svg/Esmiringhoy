@@ -1,0 +1,516 @@
+
+-- MTX CLIENT | Studio GUI
+-- Place in StarterPlayer > StarterPlayerScripts
+-- Standalone settings interface for your own game.
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local cfg = {
+    AimPart = "Head",
+    AimRadius = 100,
+    Smoothness = 0.27,
+    Prediction = 0.12,
+    SpinSpeed = 5,
+    FlySpeed = 30,
+    WalkSpeed = 26,
+    TeamCheck = false,
+    FirstPerson = true,
+    ThirdPerson = true,
+    Spin = false,
+    Fly = false,
+    Speed = false,
+    FOV = false,
+    AimDemo = false,
+}
+
+local PINK = Color3.fromRGB(219, 65, 130)
+local BG = Color3.fromRGB(22, 22, 27)
+local PANEL = Color3.fromRGB(30, 30, 36)
+local ITEM = Color3.fromRGB(40, 40, 47)
+local WHITE = Color3.fromRGB(235, 235, 240)
+local MUTED = Color3.fromRGB(155, 155, 165)
+
+local old = playerGui:FindFirstChild("MTXStudioUI")
+if old then old:Destroy() end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "MTXStudioUI"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
+
+local main = Instance.new("Frame")
+main.Size = UDim2.fromOffset(720, 450)
+main.Position = UDim2.new(0.5, -360, 0.5, -225)
+main.BackgroundColor3 = BG
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local function round(obj, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius)
+    c.Parent = obj
+end
+
+round(main, 8)
+
+local outline = Instance.new("UIStroke")
+outline.Color = PINK
+outline.Thickness = 1
+outline.Transparency = 0.2
+outline.Parent = main
+
+local top = Instance.new("Frame")
+top.Size = UDim2.new(1, 0, 0, 37)
+top.BackgroundColor3 = Color3.fromRGB(15, 15, 19)
+top.BorderSizePixel = 0
+top.Active = true
+top.Parent = main
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -90, 1, 0)
+title.Position = UDim2.fromOffset(12, 0)
+title.BackgroundTransparency = 1
+title.Text = "MTX CLIENT  /  STUDIO"
+title.Font = Enum.Font.Code
+title.TextSize = 14
+title.TextColor3 = PINK
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = top
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(28, 25)
+close.Position = UDim2.new(1, -35, 0, 6)
+close.BackgroundColor3 = ITEM
+close.Text = "—"
+close.TextColor3 = WHITE
+close.Font = Enum.Font.Code
+close.TextSize = 17
+close.Parent = top
+round(close, 4)
+
+local minimized = false
+close.Activated:Connect(function()
+    minimized = not minimized
+    main.Size = minimized
+        and UDim2.fromOffset(720, 37)
+        or UDim2.fromOffset(720, 450)
+    close.Text = minimized and "+" or "—"
+    for _, obj in ipairs(main:GetChildren()) do
+        if obj ~= top and not obj:IsA("UICorner")
+            and not obj:IsA("UIStroke") then
+            obj.Visible = not minimized
+        end
+    end
+end)
+
+-- Dragging
+local dragging, dragStart, startPos
+top.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        local d = input.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + d.X,
+            startPos.Y.Scale, startPos.Y.Offset + d.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+local tabs = {"Aimbot", "Silent", "Visual", "Movement", "Players", "Settings"}
+local nav = Instance.new("Frame")
+nav.Position = UDim2.fromOffset(10, 42)
+nav.Size = UDim2.new(1, -20, 0, 30)
+nav.BackgroundTransparency = 1
+nav.Parent = main
+
+local navLayout = Instance.new("UIListLayout")
+navLayout.FillDirection = Enum.FillDirection.Horizontal
+navLayout.Padding = UDim.new(0, 5)
+navLayout.SortOrder = Enum.SortOrder.LayoutOrder
+navLayout.Parent = nav
+
+local columns = Instance.new("Frame")
+columns.Position = UDim2.fromOffset(10, 80)
+columns.Size = UDim2.new(1, -20, 1, -90)
+columns.BackgroundTransparency = 1
+columns.Parent = main
+
+local left = Instance.new("ScrollingFrame")
+left.Size = UDim2.new(0.5, -5, 1, 0)
+left.BackgroundColor3 = PANEL
+left.BorderSizePixel = 0
+left.ScrollBarThickness = 3
+left.ScrollBarImageColor3 = PINK
+left.AutomaticCanvasSize = Enum.AutomaticSize.Y
+left.CanvasSize = UDim2.new()
+left.Parent = columns
+round(left, 5)
+
+local right = Instance.new("ScrollingFrame")
+right.Position = UDim2.new(0.5, 5, 0, 0)
+right.Size = UDim2.new(0.5, -5, 1, 0)
+right.BackgroundColor3 = PANEL
+right.BorderSizePixel = 0
+right.ScrollBarThickness = 3
+right.ScrollBarImageColor3 = PINK
+right.AutomaticCanvasSize = Enum.AutomaticSize.Y
+right.CanvasSize = UDim2.new()
+right.Parent = columns
+round(right, 5)
+
+local function makePadding(parent)
+    local p = Instance.new("UIPadding")
+    p.PaddingTop = UDim.new(0, 9)
+    p.PaddingBottom = UDim.new(0, 10)
+    p.PaddingLeft = UDim.new(0, 9)
+    p.PaddingRight = UDim.new(0, 9)
+    p.Parent = parent
+
+    local l = Instance.new("UIListLayout")
+    l.Padding = UDim.new(0, 5)
+    l.SortOrder = Enum.SortOrder.LayoutOrder
+    l.Parent = parent
+end
+
+makePadding(left)
+makePadding(right)
+
+local function heading(parent, text)
+    local h = Instance.new("TextLabel")
+    h.Size = UDim2.new(1, -4, 0, 24)
+    h.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    h.Text = "  " .. text
+    h.TextColor3 = PINK
+    h.TextXAlignment = Enum.TextXAlignment.Left
+    h.Font = Enum.Font.Code
+    h.TextSize = 13
+    h.Parent = parent
+    return h
+end
+
+local function label(parent, text)
+    local l = Instance.new("TextLabel")
+    l.Size = UDim2.new(1, -4, 0, 20)
+    l.BackgroundTransparency = 1
+    l.Text = text
+    l.TextColor3 = WHITE
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.Font = Enum.Font.Code
+    l.TextSize = 12
+    l.Parent = parent
+    return l
+end
+
+local function button(parent, text, callback)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -4, 0, 27)
+    b.BackgroundColor3 = ITEM
+    b.Text = text
+    b.TextColor3 = WHITE
+    b.Font = Enum.Font.Code
+    b.TextSize = 12
+    b.Parent = parent
+    round(b, 3)
+    b.Activated:Connect(callback)
+    return b
+end
+
+local function toggle(parent, text, key)
+    local b
+    local function refresh()
+        b.Text = text .. "     " .. (cfg[key] and "[x]" or "[ ]")
+        b.TextColor3 = cfg[key] and PINK or WHITE
+    end
+    b = button(parent, text, function()
+        cfg[key] = not cfg[key]
+        refresh()
+    end)
+    refresh()
+end
+
+local function slider(parent, text, key, min, max, step)
+    label(parent, text .. ": " .. tostring(cfg[key]))
+
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(1, -4, 0, 8)
+    track.BackgroundColor3 = Color3.fromRGB(55, 55, 63)
+    track.Parent = parent
+    round(track, 4)
+
+    local fill = Instance.new("Frame")
+    fill.BackgroundColor3 = PINK
+    fill.Size = UDim2.new(
+        (cfg[key] - min) / (max - min), 0, 1, 0
+    )
+    fill.Parent = track
+    round(fill, 4)
+
+    local hit = Instance.new("TextButton")
+    hit.Size = UDim2.new(1, 0, 1, 12)
+    hit.Position = UDim2.fromOffset(0, -6)
+    hit.BackgroundTransparency = 1
+    hit.Text = ""
+    hit.Parent = track
+
+    local valueLabel = track.Parent:GetChildren()
+    local display = valueLabel[#valueLabel - 1]
+
+    local function setFromX(x)
+        local width = math.max(track.AbsoluteSize.X, 1)
+        local alpha = math.clamp(
+            (x - track.AbsolutePosition.X) / width, 0, 1
+        )
+        local value = min + (max - min) * alpha
+        value = math.floor(value / step + 0.5) * step
+        cfg[key] = math.clamp(value, min, max)
+        fill.Size = UDim2.new(
+            (cfg[key] - min) / (max - min), 0, 1, 0
+        )
+        display.Text = text .. ": " .. tostring(cfg[key])
+    end
+
+    hit.Activated:Connect(function()
+        setFromX(UIS:GetMouseLocation().X)
+    end)
+end
+
+local function dropdown(parent, text, key, options)
+    button(parent, text .. ": " .. tostring(cfg[key]), function()
+        local current = table.find(options, cfg[key]) or 0
+        cfg[key] = options[current % #options + 1]
+        -- Refresh the current tab to update the label.
+        render(activeTab)
+    end)
+end
+
+local activeTab = "Aimbot"
+
+function render(tab)
+    activeTab = tab
+    for _, parent in ipairs({left, right}) do
+        for _, child in ipairs(parent:GetChildren()) do
+            if not child:IsA("UIPadding")
+                and not child:IsA("UIListLayout") then
+                child:Destroy()
+            end
+        end
+    end
+
+    if tab == "Aimbot" then
+        heading(left, "AIM")
+        dropdown(left, "Aim Part", "AimPart", {"Head", "HumanoidRootPart"})
+        slider(left, "Aim Radius", "AimRadius", 25, 300, 5)
+        toggle(left, "Training Dummy Camera Demo", "AimDemo")
+        heading(left, "FIELD OF VIEW")
+        toggle(left, "Show FOV", "FOV")
+
+        heading(right, "CONTROLS")
+        slider(right, "Smoothness", "Smoothness", 0.01, 1, 0.01)
+        slider(right, "Prediction", "Prediction", 0, 1, 0.01)
+        label(right, "Target: Workspace.TrainingDummy only")
+        label(right, "Camera demo does not target players")
+
+    elseif tab == "Silent" then
+        heading(left, "STUDIO TESTS")
+        label(left, "No silent-aim or remote interception is included.")
+        toggle(left, "Team Check Display Option", "TeamCheck")
+        heading(right, "PREDICTION")
+        slider(right, "Prediction", "Prediction", 0, 1, 0.01)
+        slider(right, "Smoothness", "Smoothness", 0.01, 1, 0.01)
+
+    elseif tab == "Visual" then
+        heading(left, "FIELD OF VIEW")
+        toggle(left, "Show FOV Setting", "FOV")
+        slider(left, "FOV Radius", "AimRadius", 25, 300, 5)
+        heading(right, "DISPLAY")
+        label(right, "Pink accent theme enabled")
+        label(right, "Visual settings are local UI options")
+
+    elseif tab == "Movement" then
+        heading(left, "MOVEMENT")
+        toggle(left, "Studio Fly", "Fly")
+        slider(left, "Fly Speed", "FlySpeed", 10, 100, 5)
+        toggle(left, "Studio Walk Speed", "Speed")
+        slider(left, "Walk Speed", "WalkSpeed", 16, 60, 2)
+        heading(right, "VISUAL EFFECT")
+        toggle(right, "Spin Effect", "Spin")
+        slider(right, "Spin Speed", "SpinSpeed", 1, 30, 1)
+
+    elseif tab == "Players" then
+        heading(left, "CHARACTER OPTIONS")
+        toggle(left, "First Person Option", "FirstPerson")
+        toggle(left, "Third Person Option", "ThirdPerson")
+        toggle(left, "Team Check", "TeamCheck")
+        heading(right, "TRAINING")
+        label(right, "Only the named Studio training dummy is used.")
+        label(right, "No auto-kill or hitbox modifications.")
+
+    elseif tab == "Settings" then
+        heading(left, "CONFIGURATION")
+        button(left, "Reset Settings", function()
+            cfg.AimPart = "Head"
+            cfg.AimRadius = 100
+            cfg.Smoothness = 0.27
+            cfg.Prediction = 0.12
+            cfg.SpinSpeed = 5
+            cfg.FlySpeed = 30
+            cfg.WalkSpeed = 26
+            cfg.TeamCheck = false
+            cfg.FirstPerson = true
+            cfg.ThirdPerson = true
+            cfg.Spin = false
+            cfg.Fly = false
+            cfg.Speed = false
+            cfg.FOV = false
+            cfg.AimDemo = false
+            render("Settings")
+        end)
+        button(left, "Print Configuration", function()
+            for k, v in pairs(cfg) do print(k, v) end
+        end)
+        heading(right, "KEYBOARD")
+        label(right, "F1 = toggle UI")
+        label(right, "Use the on-screen controls to edit settings")
+    end
+end
+
+for _, tab in ipairs(tabs) do
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1 / #tabs, -5, 1, 0)
+    b.BackgroundColor3 = ITEM
+    b.Text = tab
+    b.TextColor3 = WHITE
+    b.Font = Enum.Font.Code
+    b.TextSize = 12
+    b.LayoutOrder = table.find(tabs, tab)
+    b.Parent = nav
+    round(b, 3)
+
+    b.Activated:Connect(function()
+        for _, sibling in ipairs(nav:GetChildren()) do
+            if sibling:IsA("TextButton") then
+                sibling.BackgroundColor3 = ITEM
+            end
+        end
+        b.BackgroundColor3 = PINK
+        render(tab)
+    end)
+end
+
+-- Safe training-dummy camera demo and Studio movement options.
+local originalSpeed
+local lastCharacter
+local flyAttachment, flyVelocity
+local spinAngle = 0
+
+local function cleanupFly()
+    if flyVelocity then flyVelocity:Destroy() flyVelocity = nil end
+    if flyAttachment then flyAttachment:Destroy() flyAttachment = nil end
+end
+
+RunService.RenderStepped:Connect(function(dt)
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
+
+    if char ~= lastCharacter then
+        cleanupFly()
+        lastCharacter = char
+        originalSpeed = hum.WalkSpeed
+    end
+
+    hum.WalkSpeed = cfg.Speed and cfg.WalkSpeed
+        or (originalSpeed or 16)
+
+    if cfg.Spin then
+        spinAngle += cfg.SpinSpeed * dt
+        root.CFrame = root.CFrame * CFrame.Angles(0, cfg.SpinSpeed * dt, 0)
+    end
+
+    if cfg.Fly then
+        if not flyAttachment then
+            flyAttachment = Instance.new("Attachment")
+            flyAttachment.Parent = root
+
+            flyVelocity = Instance.new("LinearVelocity")
+            flyVelocity.Attachment0 = flyAttachment
+            flyVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
+            flyVelocity.VelocityConstraintMode =
+                Enum.VelocityConstraintMode.Vector
+            flyVelocity.MaxForce = 100000
+            flyVelocity.VectorVelocity = Vector3.zero
+            flyVelocity.Parent = root
+        end
+
+        local cam = workspace.CurrentCamera
+        local direction = Vector3.zero
+        if UIS:IsKeyDown(Enum.KeyCode.W) then direction += cam.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then direction -= cam.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then direction -= cam.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then direction += cam.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then direction += Vector3.yAxis end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then direction -= Vector3.yAxis end
+        if direction.Magnitude > 0 then direction = direction.Unit end
+        flyVelocity.VectorVelocity = direction * cfg.FlySpeed
+    else
+        cleanupFly()
+    end
+
+    if cfg.AimDemo then
+        local dummy = workspace:FindFirstChild("TrainingDummy")
+        local target = dummy and (
+            dummy:FindFirstChild(cfg.AimPart)
+            or dummy:FindFirstChild("HumanoidRootPart")
+        )
+        if target and target:IsA("BasePart") then
+            local cam = workspace.CurrentCamera
+            local predicted = target.Position
+                + target.AssemblyLinearVelocity * cfg.Prediction
+            local desired = CFrame.lookAt(cam.CFrame.Position, predicted)
+            cam.CFrame = cam.CFrame:Lerp(
+                desired, math.clamp(cfg.Smoothness, 0.01, 1)
+            )
+        end
+    end
+end)
+
+UIS.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.F1 then
+        main.Visible = not main.Visible
+    end
+end)
+
+gui.Destroying:Connect(function()
+    cleanupFly()
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum and originalSpeed then hum.WalkSpeed = originalSpeed end
+end)
+
+render("Aimbot")
+print("MTX Studio UI loaded.")

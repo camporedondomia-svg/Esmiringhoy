@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>amber.lol - GUI</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Font: JetBrains Mono & Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            amberDark: '#0b0b0e',
+            amberPanel: '#111116',
+            amberCard: '#15151c',
+            amberPink: '#d03565',
+            amberPinkHover: '#e03268',
+            amberBorder: '#d03565',
+            amberDimText: '#8a8a9a',
+            amberBoxBg: '#0e0e12',
+            amberInputBg: '#181820'
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0b0e;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #252530;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #d03565;
+    }
+
+    body {
+      background-color: #070709;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(208, 53, 101, 0.08) 0%, transparent 60%),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px);
+      font-family: 'JetBrains Mono', monospace;
+      user-select: none;
+    }
+
+    /* Outer Window Pink Border Highlight */
+    .amber-window {
+      box-shadow: 0 0 25px rgba(208, 53, 101, 0.25), inset 0 0 2px rgba(208, 53, 101, 0.5);
+      border: 1px solid var(--accent-color, #d03565);
+    }
+
+    .amber-section-box {
+      border: 1px solid rgba(208, 53, 101, 0.35);
+      background: #0f0f14;
+    }
+
+    /* Custom Checkbox */
+    .custom-checkbox {
+      appearance: none;
+      width: 13px;
+      height: 13px;
+      border: 1px solid #2e2e3a;
+      background-color: #15151a;
+      cursor: pointer;
+      position: relative;
+      border-radius: 1px;
+      transition: all 0.15s ease;
+    }
+
+    .custom-checkbox:checked {
+      background-color: var(--accent-color, #d03565);
+      border-color: var(--accent-color, #d03565);
+    }
+
+    .custom-checkbox:checked::after {
+      content: '✓';
+      position: absolute;
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: bold;
+      top: -2px;
+      left: 1px;
+    }
+
+    /* Custom Pink Slider Range */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+
+    input[type=range]:focus {
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 12px;
+      cursor: pointer;
+      background: #16161e;
+      border: 1px solid #242430;
+      border-radius: 1px;
+    }
+
+    /* Custom track fill emulation using JS */
+    .slider-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .slider-track-fill {
+      position: absolute;
+      left: 0;
+      top: 1px;
+      bottom: 1px;
+      background-color: var(--accent-color, #d03565);
+      pointer-events: none;
+      border-radius: 1px;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 12px;
+      width: 4px;
+      background: #ffffff;
+      cursor: pointer;
+      margin-top: -1px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.8);
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Tab indicator underline */
+    .tab-btn.active {
+      color: #ffffff;
+      border-bottom: 2px solid var(--accent-color, #d03565);
+    }
+
+    .tab-btn {
+      color: #727282;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: #b0b0c0;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-300 flex items-center justify-center p-2 sm:p-4 overflow-x-hidden">
+
+  <!-- MAIN WRAPPER CONTAINER (DESKTOP + PREVIEW CANVAS) -->
+  <div class="flex flex-col lg:flex-row gap-6 items-center lg:items-start justify-center max-w-7xl w-full">
+
+    <!-- MAIN GUI PANEL WINDOW -->
+    <div id="guiWindow" class="amber-window bg-amberPanel w-full max-w-[700px] rounded-none p-3 sm:p-4 relative flex flex-col gap-3 shadow-2xl shrink-0">
+      
+      <!-- TOP STATUS / HEADER BAR -->
+      <header id="windowHeader" class="flex items-center justify-between text-xs text-amberDimText pb-2 border-b border-[#22222d] cursor-move select-none">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amberPink animate-pulse"></span>
+          <span class="text-amberPink font-bold tracking-wide" id="brandTitle">amber.lol</span>
+          <span>-</span>
+          <span id="liveDateTime" class="text-[11px]">mar. 15, 2026 | 05:17 pm</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button title="Reset Settings" onclick="resetDefaults()" class="hover:text-amberPink transition-colors text-[10px]"><i class="fa-solid fa-rotate-left"></i></button>
+          <button title="Toggle Accent Color" onclick="toggleAccent()" class="hover:text-amberPink transition-colors text-[10px]"><i class="fa-solid fa-palette"></i></button>
+          <span class="text-[10px] px-1.5 py-0.5 bg-[#1a1a24] text-slate-400 border border-[#2a2a38]">v2.4</span>
+        </div>
+      </header>
+
+      <!-- TOP NAVIGATION TABS -->
+      <nav class="flex items-center justify-between border-b border-[#1e1e28] pb-1 text-xs font-semibold overflow-x-auto gap-2">
+        <button onclick="switchTab('aimbot')" class="tab-btn active px-3 py-1.5 whitespace-nowrap">Aimbot</button>
+        <button onclick="switchTab('silent')" class="tab-btn px-3 py-1.5 whitespace-nowrap">Silent</button>
+        <button onclick="switchTab('visual')" class="tab-btn px-3 py-1.5 whitespace-nowrap">Visual</button>
+        <button onclick="switchTab('movement')" class="tab-btn px-3 py-1.5 whitespace-nowrap">Movement</button>
+        <button onclick="switchTab('players')" class="tab-btn px-3 py-1.5 whitespace-nowrap">Players</button>
+        <button onclick="switchTab('settings')" class="tab-btn px-3 py-1.5 whitespace-nowrap">Settings</button>
+      </nav>
+
+      <!-- TAB CONTENT: AIMBOT (DEFAULT VIEW) -->
+      <div id="tabContentAimbot" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+
+        <!-- LEFT COLUMN: AIMBOT & FOV SETTINGS -->
+        <div class="flex flex-col gap-3">
+          
+          <!-- BOX 1: AIMBOT CONFIG -->
+          <div class="amber-section-box p-3 flex flex-col gap-2.5 relative">
+            <span class="text-[11px] font-bold text-slate-200 block mb-0.5">Aimbot</span>
+
+            <!-- Checkbox Option 1 -->
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                <input type="checkbox" id="chkAim" checked onchange="updateCanvas()" class="custom-checkbox">
+                <span>Aim</span>
+              </label>
+              <button onclick="openKeyModal('Aim')" id="btnAimKey" class="px-2 py-0.5 bg-[#181822] border border-[#282836] text-[10px] text-slate-400 hover:text-white hover:border-amberPink transition-colors">None</button>
+            </div>
+
+            <!-- Checkbox Option 2 -->
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                <input type="checkbox" id="chkStickyAim" class="custom-checkbox">
+                <span>Sticky Aim</span>
+              </label>
+            </div>
+
+            <!-- Checkbox Option 3 -->
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                <input type="checkbox" id="chkClosestPart" checked class="custom-checkbox">
+                <span>Closest Part</span>
+              </label>
+            </div>
+
+            <!-- Dropdown: Type -->
+            <div class="mt-1">
+              <span class="text-[10px] text-amberDimText block mb-1">Type</span>
+              <div class="relative">
+                <select id="selType" class="w-full bg-[#121218] border border-[#252532] text-slate-200 text-xs px-2 py-1 appearance-none focus:outline-none focus:border-amberPink cursor-pointer">
+                  <option value="Camera">Camera</option>
+                  <option value="Mouse">Mouse</option>
+                  <option value="Silent">Memory / Silent</option>
+                </select>
+                <span class="absolute right-2 top-1.5 text-[9px] text-amberDimText pointer-events-none">+</span>
+              </div>
+            </div>
+
+            <!-- Dropdown: Aim Part -->
+            <div>
+              <span class="text-[10px] text-amberDimText block mb-1">Aim Part</span>
+              <div class="relative">
+                <select id="selAimPart" onchange="updateCanvas()" class="w-full bg-[#121218] border border-[#252532] text-slate-200 text-xs px-2 py-1 appearance-none focus:outline-none focus:border-amberPink cursor-pointer">
+                  <option value="Head">Head</option>
+                  <option value="Torso">Torso</option>
+                  <option value="HumanoidRootPart">HumanoidRootPart</option>
+                </select>
+                <span class="absolute right-2 top-1.5 text-[9px] text-amberDimText pointer-events-none">+</span>
+              </div>
+            </div>
+
+            <!-- Dropdown: Air Part -->
+            <div>
+              <span class="text-[10px] text-amberDimText block mb-1">Air Part</span>
+              <div class="relative">
+                <select id="selAirPart" class="w-full bg-[#121218] border border-[#252532] text-slate-200 text-xs px-2 py-1 appearance-none focus:outline-none focus:border-amberPink cursor-pointer">
+                  <option value="Head">Head</option>
+                  <option value="Torso">Torso</option>
+                </select>
+                <span class="absolute right-2 top-1.5 text-[9px] text-amberDimText pointer-events-none">+</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- BOX 2: FOV SETTINGS -->
+          <div class="amber-section-box p-3 flex flex-col gap-2.5">
+            <span class="text-[11px] font-bold text-slate-200 block mb-0.5">FOV</span>
+
+            <!-- Checkbox: Use FOV -->
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                <input type="checkbox" id="chkUseFOV" checked onchange="updateCanvas()" class="custom-checkbox">
+                <span>Use FOV</span>
+              </label>
+              <div class="w-3.5 h-3.5 bg-amberPink border border-white/20 cursor-pointer" title="FOV Color Picker"></div>
+            </div>
+
+            <!-- Checkbox: Fill FOV -->
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                <input type="checkbox" id="chkFillFOV" onchange="updateCanvas()" class="custom-checkbox">
+                <span>Fill FOV</span>
+              </label>
+              <div class="w-3.5 h-3.5 bg-slate-300 border border-white/20 cursor-pointer" title="Fill Color Picker"></div>
+            </div>
+
+            <!-- Checkbox: Spin FOV -->
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                <input type="checkbox" id="chkSpinFOV" onchange="updateCanvas()" class="custom-checkbox">
+                <span>Spin FOV</span>
+              </label>
+            </div>
+
+            <!-- Slider: FOV Radius -->
+            <div class="mt-1">
+              <div class="flex justify-between text-[10px] text-amberDimText mb-1">
+                <span>FOV Radius</span>
+                <span id="valFovRadius" class="text-slate-300 font-bold">50</span>
+              </div>
+              <div class="slider-container">
+                <div id="fillFovRadius" class="slider-track-fill" style="width: 25%;"></div>
+                <input type="range" id="sldFovRadius" min="5" max="200" value="50" oninput="handleSlider(this, 'valFovRadius', 'fillFovRadius')">
+              </div>
+            </div>
+
+            <!-- Slider: FOV Transparency -->
+            <div>
+              <div class="flex justify-between text-[10px] text-amberDimText mb-1">
+                <span>FOV Transparency</span>
+                <span id="valFovTrans" class="text-slate-300 font-bold">1</span>
+              </div>
+              <div class="slider-container">
+                <div id="fillFovTrans" class="slider-track-fill" style="width: 100%;"></div>
+                <input type="range" id="sldFovTrans" min="0.1" max="1" step="0.1" value="1" oninput="handleSlider(this, 'valFovTrans', 'fillFovTrans')">
+              </div>
+            </div>
+
+            <!-- Slider: Fill Transparency -->
+            <div>
+              <div class="flex justify-between text-[10px] text-amberDimText mb-1">
+                <span>Fill Transparency</span>
+                <span id="valFillTrans" class="text-slate-300 font-bold">1</span>
+              </div>
+              <div class="slider-container">
+                <div id="fillFillTrans" class="slider-track-fill" style="width: 100%;"></div>
+                <input type="range" id="sldFillTrans" min="0.1" max="1" step="0.1" value="1" oninput="handleSlider(this, 'valFillTrans', 'fillFillTrans')">
+              </div>
+            </div>
+
+            <!-- Slider: Spin Speed -->
+            <div>
+              <div class="flex justify-between text-[10px] text-amberDimText mb-1">
+                <span>Spin Speed</span>
+                <span id="valSpinSpeed" class="text-slate-300 font-bold">1</span>
+              </div>
+              <div class="slider-container">
+                <div id="fillSpinSpeed" class="slider-track-fill" style="width: 10%;"></div>
+                <input type="range" id="sldSpinSpeed" min="0" max="10" step="1" value="1" oninput="handleSlider(this, 'valSpinSpeed', 'fillSpinSpeed')">
+              </div>
+            </div>
+
+            <!-- Dropdown: Shape -->
+            <div>
+              <span class="text-[10px] text-amberDimText block mb-1">Shape</span>
+              <div class="relative">
+                <select id="selShape" onchange="updateCanvas()" class="w-full bg-[#121218] border border-[#252532] text-slate-200 text-xs px-2 py-1 appearance-none focus:outline-none focus:border-amberPink cursor-pointer">
+                  <option value="Circle">Circle</option>
+                  <option value="Square">Square</option>
+                  <option value="Hexagon">Hexagon</option>
+                </select>
+                <span class="absolute right-2 top-1.5 text-[9px] text-amberDimText pointer-events-none">+</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: CONTROLS, SMOOTHNESS & CHECKS -->
+        <div class="flex flex-col gap-3">
+          
+          <div class="amber-section-box p-3 flex flex-col gap-2.5 h-full justify-between">
+            <div>
+              <span class="text-[11px] font-bold text-slate-200 block mb-2">Controls</span>
+
+              <!-- Checkbox: Smoothness -->
+              <div class="flex items-center justify-between mb-2">
+                <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                  <input type="checkbox" id="chkSmoothness" checked onchange="updateCanvas()" class="custom-checkbox">
+                  <span>Smoothness</span>
+                </label>
+              </div>
+
+              <!-- Slider: Smoothness X -->
+              <div class="mb-2">
+                <div class="flex justify-between text-[10px] text-amberDimText mb-1">
+                  <span>Smoothness X</span>
+                  <span id="valSmoothX" class="text-slate-300 font-bold">5</span>
+                </div>
+                <div class="slider-container">
+                  <div id="fillSmoothX" class="slider-track-fill" style="width: 25%;"></div>
+                  <input type="range" id="sldSmoothX" min="1" max="20" value="5" oninput="handleSlider(this, 'valSmoothX', 'fillSmoothX')">
+                </div>
+              </div>
+
+              <!-- Slider: Smoothness Y -->
+              <div class="mb-3">
+                <div class="flex justify-between text-[10px] text-amberDimText mb-1">
+                  <span>Smoothness Y</span>
+                  <span id="valSmoothY" class="text-slate-300 font-bold">5</span>
+                </div>
+                <div class="slider-container">
+                  <div id="fillSmoothY" class="slider-track-fill" style="width: 25%;"></div>
+                  <input type="range" id="sldSmoothY" min="1" max="20" value="5" oninput="handleSlider(this, 'valSmoothY', 'fillSmoothY')">
+                </div>
+              </div>
+
+              <!-- Checkbox: Predictions -->
+              <div class="flex items-center justify-between mb-2">
+                <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                  <input type="checkbox" id="chkPredictions" checked class="custom-checkbox">
+                  <span>Predictions</span>
+                </label>
+              </div>
+
+              <!-- Slider: Prediction X -->
+              <div class="mb-2">
+                <div class="flex justify-between text-[10px] text-amberDimText mb-1">
+                  <span>Prediction X</span>
+                  <span id="valPredX" class="text-slate-300 font-bold">5</span>
+                </div>
+                <div class="slider-container">
+                  <div id="fillPredX" class="slider-track-fill" style="width: 25%;"></div>
+                  <input type="range" id="sldPredX" min="0" max="20" value="5" oninput="handleSlider(this, 'valPredX', 'fillPredX')">
+                </div>
+              </div>
+
+              <!-- Slider: Prediction Y -->
+              <div class="mb-3">
+                <div class="flex justify-between text-[10px] text-amberDimText mb-1">
+                  <span>Prediction Y</span>
+                  <span id="valPredY" class="text-slate-300 font-bold">5</span>
+                </div>
+                <div class="slider-container">
+                  <div id="fillPredY" class="slider-track-fill" style="width: 25%;"></div>
+                  <input type="range" id="sldPredY" min="0" max="20" value="5" oninput="handleSlider(this, 'valPredY', 'fillPredY')">
+                </div>
+              </div>
+
+              <!-- Dropdown: Smoothing Style -->
+              <div class="mb-3">
+                <span class="text-[10px] text-amberDimText block mb-1">Smoothing Style</span>
+                <div class="relative">
+                  <select id="selSmoothStyle" class="w-full bg-[#121218] border border-[#252532] text-slate-200 text-xs px-2 py-1 appearance-none focus:outline-none focus:border-amberPink cursor-pointer">
+                    <option value="None">None</option>
+                    <option value="Linear">Linear</option>
+                    <option value="Cubic">Cubic</option>
+                    <option value="Exponential">Exponential</option>
+                  </select>
+                  <span class="absolute right-2 top-1.5 text-[9px] text-amberDimText pointer-events-none">+</span>
+                </div>
+              </div>
+
+              <!-- Checks List -->
+              <div class="flex flex-col gap-2 pt-1 border-t border-[#1a1a24]">
+                <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                  <input type="checkbox" id="chkTeamCheck" checked class="custom-checkbox">
+                  <span>Team Check</span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                  <input type="checkbox" id="chkKnockedCheck" class="custom-checkbox">
+                  <span>Knocked Check</span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                  <input type="checkbox" id="chkWallcheck" checked class="custom-checkbox">
+                  <span>Wallcheck</span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                  <input type="checkbox" id="chkDistanceCheck" class="custom-checkbox">
+                  <span>Distance Check</span>
+                </label>
+
+                <!-- Trigger Bot -->
+                <div class="flex items-center justify-between mt-1">
+                  <label class="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                    <input type="checkbox" id="chkTriggerBot" class="custom-checkbox">
+                    <span>Trigger Bot</span>
+                  </label>
+                  <button onclick="openKeyModal('Trigger Bot')" id="btnTriggerKey" class="px-2 py-0.5 bg-[#181822] border border-[#282836] text-[10px] text-slate-400 hover:text-white hover:border-amberPink transition-colors">None</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-[9px] text-amberDimText text-right pt-2 border-t border-[#181822]">
+              Config Status: <span class="text-amberPink">Loaded</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- PLACEHOLDER FOR OTHER TABS -->
+      <div id="tabContentOther" class="hidden amber-section-box p-8 text-center text-xs text-amberDimText">
+        <i class="fa-solid fa-sliders text-2xl text-amberPink mb-2 block"></i>
+        <p id="otherTabTitle" class="text-sm font-bold text-white mb-1">Silent Module</p>
+        <p>Configuration panel loaded for selected tab. Features active in game client memory.</p>
+      </div>
+
+    </div>
+
+    <!-- RIGHT SIDE: DYNAMIC RADAR / AIMBOT FOV PREVIEW CANVAS -->
+    <div class="w-full max-w-[380px] amber-window bg-amberPanel p-4 flex flex-col items-center gap-3 shadow-2xl">
+      <div class="flex items-center justify-between w-full border-b border-[#22222d] pb-2 text-xs">
+        <span class="text-amberPink font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-crosshairs text-xs"></i> FOV / Aim Simulation
+        </span>
+        <span class="text-[10px] text-slate-400 font-mono" id="simStatus">LOCKED</span>
+      </div>
+
+      <!-- Canvas -->
+      <div class="relative w-full aspect-square bg-[#08080b] border border-[#1e1e28] overflow-hidden flex items-center justify-center">
+        <canvas id="aimCanvas" width="320" height="320" class="w-full h-full"></canvas>
+        
+        <!-- Subtle Grid Lines overlay -->
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,#14141d_1px,transparent_1px),linear-gradient(to_bottom,#14141d_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-40"></div>
+      </div>
+
+      <!-- Telemetry Info -->
+      <div class="grid grid-cols-2 gap-2 w-full text-[10px] font-mono">
+        <div class="bg-[#0e0e14] border border-[#1b1b26] p-2 flex flex-col">
+          <span class="text-amberDimText">Target Distance</span>
+          <span id="teleDist" class="text-white font-bold">12.4m</span>
+        </div>
+        <div class="bg-[#0e0e14] border border-[#1b1b26] p-2 flex flex-col">
+          <span class="text-amberDimText">Lock Part</span>
+          <span id="telePart" class="text-amberPink font-bold">HEAD</span>
+        </div>
+      </div>
+
+      <div class="text-[10px] text-amberDimText text-center leading-tight">
+        Move mouse inside canvas to test FOV target acquisition and smoothness delay.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- KEYBIND MODAL -->
+  <div id="keyModal" class="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-[#111116] border border-amberPink p-5 max-w-xs w-full text-center shadow-2xl relative">
+      <h3 class="text-xs font-bold text-white mb-1">Set Keybind</h3>
+      <p class="text-[11px] text-amberDimText mb-4">Press any key for <span id="keyBindTarget" class="text-amberPink font-bold">Aim</span>...</p>
+      
+      <div id="keyDisplayBox" class="w-16 h-12 mx-auto bg-[#181822] border border-[#2d2d3d] text-white flex items-center justify-center text-sm font-bold font-mono mb-4 animate-pulse">
+        ...
+      </div>
+
+      <div class="flex gap-2 justify-center">
+        <button onclick="closeKeyModal()" class="px-3 py-1 bg-[#1c1c26] text-xs text-slate-300 hover:text-white border border-[#2d2d3d]">Cancel</button>
+        <button onclick="clearKeybind()" class="px-3 py-1 bg-amberPink text-xs text-white hover:bg-amberPinkHover">Clear Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT CONTROLS & RADAR ANIMATION -->
+  <script>
+    // System variables
+    let currentThemeColor = '#d03565';
+    let activeKeybindTarget = null;
+    let bindMap = { 'Aim': 'None', 'Trigger Bot': 'None' };
+
+    // Canvas & Target Tracking Logic
+    const canvas = document.getElementById('aimCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let mouseX = canvas.width / 2;
+    let mouseY = canvas.height / 2;
+    let targetX = canvas.width / 2 + 35;
+    let targetY = canvas.height / 2 - 25;
+    let targetVelX = 1.2;
+    let targetVelY = 0.8;
+    let crosshairX = canvas.width / 2;
+    let crosshairY = canvas.height / 2;
+    let spinAngle = 0;
+
+    // Canvas mouse movement tracking
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      targetX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      targetY = (e.clientY - rect.top) * (canvas.height / rect.height);
+    });
+
+    // Slider track filler script
+    function handleSlider(slider, valId, fillId) {
+      const val = slider.value;
+      document.getElementById(valId).innerText = val;
+
+      const min = slider.min ? parseFloat(slider.min) : 0;
+      const max = slider.max ? parseFloat(slider.max) : 100;
+      const percentage = ((val - min) / (max - min)) * 100;
+
+      document.getElementById(fillId).style.width = percentage + '%';
+      updateCanvas();
+    }
+
+    // Live Date Time updater
+    function updateDateTime() {
+      const now = new Date();
+      const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+      const m = months[now.getMonth()];
+      const d = String(now.getDate()).padStart(2, '0');
+      const y = now.getFullYear();
+      
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'pm' : 'am';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const h = String(hours).padStart(2, '0');
+
+      document.getElementById('liveDateTime').innerText = `${m}. ${d}, ${y} | ${h}:${minutes} ${ampm}`;
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    // Tab Switching
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const aimContent = document.getElementById('tabContentAimbot');
+      const otherContent = document.getElementById('tabContentOther');
+
+      if (tabName === 'aimbot') {
+        aimContent.classList.remove('hidden');
+        otherContent.classList.add('hidden');
+      } else {
+        aimContent.classList.add('hidden');
+        otherContent.classList.remove('hidden');
+        document.getElementById('otherTabTitle').innerText = tabName.charAt(0).toUpperCase() + tabName.slice(1) + ' Module';
+      }
+    }
+
+    // Modal Keybinding System
+    function openKeyModal(targetName) {
+      activeKeybindTarget = targetName;
+      document.getElementById('keyBindTarget').innerText = targetName;
+      document.getElementById('keyDisplayBox').innerText = '...';
+      document.getElementById('keyModal').classList.remove('hidden');
+    }
+
+    function closeKeyModal() {
+      document.getElementById('keyModal').classList.add('hidden');
+      activeKeybindTarget = null;
+    }
+
+    function clearKeybind() {
+      if (activeKeybindTarget === 'Aim') {
+        document.getElementById('btnAimKey').innerText = 'None';
+      } else if (activeKeybindTarget === 'Trigger Bot') {
+        document.getElementById('btnTriggerKey').innerText = 'None';
+      }
+      closeKeyModal();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (!activeKeybindTarget) return;
+      const keyName = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+      
+      if (activeKeybindTarget === 'Aim') {
+        document.getElementById('btnAimKey').innerText = keyName;
+      } else if (activeKeybindTarget === 'Trigger Bot') {
+        document.getElementById('btnTriggerKey').innerText = keyName;
+      }
+      closeKeyModal();
+    });
+
+    // Toggle Accent Colors
+    const palette = ['#d03565', '#35d0a0', '#358bd0', '#a035d0', '#d0a035'];
+    let paletteIdx = 0;
+    function toggleAccent() {
+      paletteIdx = (paletteIdx + 1) % palette.length;
+      currentThemeColor = palette[paletteIdx];
+      document.documentElement.style.setProperty('--accent-color', currentThemeColor);
+      
+      // Update inline border colors
+      document.querySelectorAll('.amber-window').forEach(w => w.style.borderColor = currentThemeColor);
+      document.querySelectorAll('.slider-track-fill').forEach(s => s.style.backgroundColor = currentThemeColor);
+      document.querySelectorAll('.tab-btn.active').forEach(t => t.style.borderBottomColor = currentThemeColor);
+      
+      updateCanvas();
+    }
+
+    // Reset settings
+    function resetDefaults() {
+      document.getElementById('sldFovRadius').value = 50;
+      handleSlider(document.getElementById('sldFovRadius'), 'valFovRadius', 'fillFovRadius');
+      document.getElementById('sldSmoothX').value = 5;
+      handleSlider(document.getElementById('sldSmoothX'), 'valSmoothX', 'fillSmoothX');
+      document.getElementById('sldSmoothY').value = 5;
+      handleSlider(document.getElementById('sldSmoothY'), 'valSmoothY', 'fillSmoothY');
+    }
+
+    // Main Canvas Render Loop
+    function updateCanvas() {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      // Settings values
+      const useFov = document.getElementById('chkUseFOV').checked;
+      const fillFov = document.getElementById('chkFillFOV').checked;
+      const spinFov = document.getElementById('chkSpinFOV').checked;
+      const fovRadius = parseFloat(document.getElementById('sldFovRadius').value);
+      const fovTrans = parseFloat(document.getElementById('sldFovTrans').value);
+      const fillTrans = parseFloat(document.getElementById('sldFillTrans').value);
+      const spinSpeed = parseFloat(document.getElementById('sldSpinSpeed').value);
+      const shape = document.getElementById('selShape').value;
+      const isAimActive = document.getElementById('chkAim').checked;
+      const isSmoothness = document.getElementById('chkSmoothness').checked;
+      const smoothX = parseFloat(document.getElementById('sldSmoothX').value);
+
+      // Clear Canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Update target movement if not hovering manually
+      targetX += targetVelX;
+      targetY += targetVelY;
+      if (targetX < 40 || targetX > canvas.width - 40) targetVelX *= -1;
+      if (targetY < 40 || targetY > canvas.height - 40) targetVelY *= -1;
+
+      // Calculate distance from center to target
+      const dist = Math.hypot(targetX - centerX, targetY - centerY);
+      const inFov = dist <= fovRadius || !useFov;
+
+      // Telemetry update
+      document.getElementById('teleDist').innerText = (dist * 0.2).toFixed(1) + 'm';
+      document.getElementById('telePart').innerText = document.getElementById('selAimPart').value.toUpperCase();
+      document.getElementById('simStatus').innerText = (isAimActive && inFov) ? 'LOCKED' : 'SEARCHING';
+      document.getElementById('simStatus').className = (isAimActive && inFov) ? 'text-[10px] text-amberPink font-mono font-bold' : 'text-[10px] text-amberDimText font-mono';
+
+      // Draw Target (Enemy Dummy)
+      ctx.fillStyle = inFov ? '#ff3366' : '#555566';
+      ctx.beginPath();
+      ctx.arc(targetX, targetY, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Target head highlight ring
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(targetX, targetY, 9, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Draw FOV Ring / Shape
+      if (useFov) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+
+        if (spinFov) {
+          spinAngle += (spinSpeed * 0.02);
+          ctx.rotate(spinAngle);
+        }
+
+        ctx.strokeStyle = currentThemeColor;
+        ctx.globalAlpha = fovTrans;
+        ctx.lineWidth = 1.5;
+
+        if (shape === 'Circle') {
+          ctx.beginPath();
+          ctx.arc(0, 0, fovRadius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          if (fillFov) {
+            ctx.fillStyle = currentThemeColor;
+            ctx.globalAlpha = fillTrans * 0.2;
+            ctx.fill();
+          }
+        } else if (shape === 'Square') {
+          ctx.strokeRect(-fovRadius, -fovRadius, fovRadius * 2, fovRadius * 2);
+          if (fillFov) {
+            ctx.fillStyle = currentThemeColor;
+            ctx.globalAlpha = fillTrans * 0.2;
+            ctx.fillRect(-fovRadius, -fovRadius, fovRadius * 2, fovRadius * 2);
+          }
+        } else if (shape === 'Hexagon') {
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i;
+            const x = fovRadius * Math.cos(angle);
+            const y = fovRadius * Math.sin(angle);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+          ctx.stroke();
+          if (fillFov) {
+            ctx.fillStyle = currentThemeColor;
+            ctx.globalAlpha = fillTrans * 0.2;
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+      }
+
+      // Smooth Crosshair Interpolation towards target if Aim is Enabled and in FOV
+      if (isAimActive && inFov) {
+        const speed = isSmoothness ? (1 / (smoothX * 1.5)) : 0.4;
+        crosshairX += (targetX - crosshairX) * speed;
+        crosshairY += (targetY - crosshairY) * speed;
+      } else {
+        // Return crosshair to center
+        crosshairX += (centerX - crosshairX) * 0.1;
+        crosshairY += (centerY - crosshairY) * 0.1;
+      }
+
+      // Draw Crosshair
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      // Horizontal line
+      ctx.moveTo(crosshairX - 8, crosshairY);
+      ctx.lineTo(crosshairX + 8, crosshairY);
+      // Vertical line
+      ctx.moveTo(crosshairX, crosshairY - 8);
+      ctx.lineTo(crosshairX, crosshairY + 8);
+      ctx.stroke();
+
+      // Center dot
+      ctx.fillStyle = currentThemeColor;
+      ctx.beginPath();
+      ctx.arc(crosshairX, crosshairY, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Animation Loop
+    function loop() {
+      updateCanvas();
+      requestAnimationFrame(loop);
+    }
+    loop();
+
+    // Draggable window implementation
+    const guiWindow = document.getElementById("guiWindow");
+    const windowHeader = document.getElementById("windowHeader");
+
+    let isDragging = false;
+    let offsetX = 0, offsetY = 0;
+
+    windowHeader.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      offsetX = e.clientX - guiWindow.offsetLeft;
+      offsetY = e.clientY - guiWindow.offsetTop;
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      guiWindow.style.position = "absolute";
+      guiWindow.style.left = `${e.clientX - offsetX}px`;
+      guiWindow.style.top = `${e.clientY - offsetY}px`;
+    });
+
+    document.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
+  </script>
+
+</body>
+</html>

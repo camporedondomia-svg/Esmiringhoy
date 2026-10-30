@@ -1,0 +1,461 @@
+
+-- NEVERLARP STYLE GUI
+-- Interface only. No combat or automation functions.
+-- LocalScript | StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local old = playerGui:FindFirstChild("NeverLarpGUI")
+if old then old:Destroy() end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "NeverLarpGUI"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = playerGui
+
+local C = {
+    Background = Color3.fromRGB(12, 12, 16),
+    Sidebar = Color3.fromRGB(14, 14, 18),
+    Card = Color3.fromRGB(19, 19, 25),
+    Element = Color3.fromRGB(26, 26, 33),
+    Border = Color3.fromRGB(35, 35, 44),
+    Blue = Color3.fromRGB(76, 125, 255),
+    White = Color3.fromRGB(235, 235, 242),
+    Gray = Color3.fromRGB(135, 135, 148),
+}
+
+local function corner(obj, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius)
+    c.Parent = obj
+end
+
+local function stroke(obj, color)
+    local s = Instance.new("UIStroke")
+    s.Color = color or C.Border
+    s.Thickness = 1
+    s.Parent = obj
+end
+
+local function label(parent, text, size, pos, color, font)
+    local l = Instance.new("TextLabel")
+    l.BackgroundTransparency = 1
+    l.Text = text
+    l.TextSize = size
+    l.Position = pos
+    l.Size = UDim2.new(1, 0, 0, 24)
+    l.TextColor3 = color or C.White
+    l.Font = font or Enum.Font.Gotham
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.Parent = parent
+    return l
+end
+
+-- MAIN WINDOW
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.fromOffset(800, 600)
+main.Position = UDim2.new(0.5, -400, 0.5, -300)
+main.BackgroundColor3 = C.Background
+main.BorderSizePixel = 0
+main.Parent = gui
+corner(main, 13)
+stroke(main, C.Border)
+
+-- SIDEBAR
+
+local sidebar = Instance.new("Frame")
+sidebar.Size = UDim2.new(0, 175, 1, 0)
+sidebar.BackgroundColor3 = C.Sidebar
+sidebar.BorderSizePixel = 0
+sidebar.Parent = main
+corner(sidebar, 13)
+
+local sideLine = Instance.new("Frame")
+sideLine.Size = UDim2.new(0, 1, 1, -20)
+sideLine.Position = UDim2.new(1, -1, 0, 10)
+sideLine.BackgroundColor3 = C.Border
+sideLine.BorderSizePixel = 0
+sideLine.Parent = sidebar
+
+label(sidebar, "NeverLarp", 17, UDim2.fromOffset(54, 10),
+    C.White, Enum.Font.GothamBold)
+
+label(sidebar, "Hood Custom is Free For All", 9,
+    UDim2.fromOffset(54, 31), C.Gray)
+
+local avatar = Instance.new("ImageLabel")
+avatar.Size = UDim2.fromOffset(31, 31)
+avatar.Position = UDim2.fromOffset(13, 10)
+avatar.BackgroundColor3 = C.Element
+avatar.Parent = sidebar
+corner(avatar, 20)
+
+task.spawn(function()
+    local success, image = pcall(function()
+        return Players:GetUserThumbnailAsync(
+            player.UserId,
+            Enum.ThumbnailType.HeadShot,
+            Enum.ThumbnailSize.Size100x100
+        )
+    end)
+    if success then avatar.Image = image end
+end)
+
+local separator = Instance.new("Frame")
+separator.Position = UDim2.fromOffset(10, 51)
+separator.Size = UDim2.new(1, -20, 0, 1)
+separator.BackgroundColor3 = C.Border
+separator.BorderSizePixel = 0
+separator.Parent = sidebar
+
+local tabs = {
+    {"L", "Legit"},
+    {"R", "RageBot"},
+    {"K", "KnifeBot"},
+    {"M", "Misc"},
+    {"V", "Visuals"},
+    {"S", "Skinchanger"},
+}
+
+local currentTab = "Legit"
+local tabButtons = {}
+
+local function createTab(iconText, name, index)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -20, 0, 30)
+    b.Position = UDim2.fromOffset(10, 62 + (index-1)*35)
+    b.BackgroundColor3 = name == currentTab and C.Element
+        or C.Sidebar
+    b.Text = ""
+    b.AutoButtonColor = false
+    b.Parent = sidebar
+    corner(b, 8)
+
+    local icon = label(b, iconText, 13,
+        UDim2.fromOffset(10, 3), C.Gray, Enum.Font.GothamBold)
+    icon.Size = UDim2.fromOffset(15, 23)
+
+    local text = label(b, name, 11,
+        UDim2.fromOffset(29, 3), C.White)
+    text.Size = UDim2.new(1, -35, 0, 23)
+
+    tabButtons[name] = b
+
+    b.Activated:Connect(function()
+        currentTab = name
+
+        for tabName, button in pairs(tabButtons) do
+            button.BackgroundColor3 =
+                tabName == name and C.Element or C.Sidebar
+        end
+    end)
+end
+
+for i, item in ipairs(tabs) do
+    createTab(item[1], item[2], i)
+end
+
+-- PROFILE FOOTER
+
+local footer = Instance.new("Frame")
+footer.Size = UDim2.new(1, -20, 0, 50)
+footer.Position = UDim2.new(0, 10, 1, -60)
+footer.BackgroundTransparency = 1
+footer.Parent = sidebar
+
+local footerLine = Instance.new("Frame")
+footerLine.Size = UDim2.new(1, 0, 0, 1)
+footerLine.BackgroundColor3 = C.Border
+footerLine.Parent = footer
+
+label(footer, player.DisplayName, 12,
+    UDim2.fromOffset(42, 12), C.White, Enum.Font.GothamBold)
+
+label(footer, tostring(player.UserId), 9,
+    UDim2.fromOffset(42, 28), C.Gray)
+
+-- TOP BAR
+
+local top = Instance.new("Frame")
+top.Position = UDim2.fromOffset(176, 0)
+top.Size = UDim2.new(1, -176, 0, 50)
+top.BackgroundTransparency = 1
+top.Parent = main
+
+local preset = Instance.new("TextButton")
+preset.Size = UDim2.fromOffset(115, 32)
+preset.Position = UDim2.fromOffset(10, 9)
+preset.BackgroundColor3 = C.Element
+preset.Text = "▣   Default   ⌄"
+preset.TextColor3 = C.White
+preset.TextSize = 11
+preset.Font = Enum.Font.Gotham
+preset.Parent = top
+corner(preset, 7)
+
+local search = Instance.new("TextButton")
+search.Size = UDim2.fromOffset(35, 32)
+search.Position = UDim2.new(1, -45, 0, 9)
+search.BackgroundTransparency = 1
+search.Text = "⌕"
+search.TextColor3 = C.White
+search.TextSize = 22
+search.Parent = top
+
+local topLine = Instance.new("Frame")
+topLine.Position = UDim2.fromOffset(0, 50)
+topLine.Size = UDim2.new(1, 0, 0, 1)
+topLine.BackgroundColor3 = C.Border
+topLine.Parent = main
+
+-- CONTENT AREA
+
+local content = Instance.new("ScrollingFrame")
+content.Position = UDim2.fromOffset(185, 58)
+content.Size = UDim2.new(1, -195, 1, -70)
+content.BackgroundTransparency = 1
+content.BorderSizePixel = 0
+content.ScrollBarThickness = 3
+content.ScrollBarImageColor3 = C.Blue
+content.CanvasSize = UDim2.fromOffset(0, 520)
+content.Parent = main
+
+-- CARDS
+
+local function createCard(name, x, y, width, height)
+    local card = Instance.new("Frame")
+    card.Position = UDim2.fromOffset(x, y)
+    card.Size = UDim2.fromOffset(width, height)
+    card.BackgroundColor3 = C.Card
+    card.BorderSizePixel = 0
+    card.Parent = content
+    corner(card, 10)
+    stroke(card)
+
+    label(content, name, 10,
+        UDim2.fromOffset(x + 12, y - 17), C.Gray)
+
+    return card
+end
+
+local aimCard = createCard("aimbot & silent", 5, 17, 295, 120)
+local fovCard = createCard("fov visualizer", 310, 17, 275, 120)
+local tuningCard = createCard("checks & tuning", 5, 163, 295, 180)
+
+-- TOGGLE CONTROL
+
+local function makeToggle(parent, text, y, default)
+    local row = Instance.new("Frame")
+    row.Position = UDim2.fromOffset(8, y)
+    row.Size = UDim2.new(1, -16, 0, 30)
+    row.BackgroundTransparency = 1
+    row.Parent = parent
+
+    label(row, text, 11, UDim2.fromOffset(3, 3), C.White)
+
+    local toggle = Instance.new("TextButton")
+    toggle.Size = UDim2.fromOffset(31, 17)
+    toggle.Position = UDim2.new(1, -33, 0, 6)
+    toggle.Text = ""
+    toggle.BackgroundColor3 = default and C.Blue or C.Element
+    toggle.Parent = row
+    corner(toggle, 12)
+
+    local dot = Instance.new("Frame")
+    dot.Size = UDim2.fromOffset(13, 13)
+    dot.Position = default and UDim2.fromOffset(16, 2)
+        or UDim2.fromOffset(2, 2)
+    dot.BackgroundColor3 = Color3.new(1,1,1)
+    dot.Parent = toggle
+    corner(dot, 10)
+
+    local state = default or false
+
+    toggle.Activated:Connect(function()
+        state = not state
+        toggle.BackgroundColor3 = state and C.Blue or C.Element
+        dot.Position = state and UDim2.fromOffset(16, 2)
+            or UDim2.fromOffset(2, 2)
+    end)
+
+    return toggle
+end
+
+-- DROPDOWN
+
+local function makeDropdown(parent, text, y, value, options)
+    local row = Instance.new("Frame")
+    row.Position = UDim2.fromOffset(8, y)
+    row.Size = UDim2.new(1, -16, 0, 30)
+    row.BackgroundTransparency = 1
+    row.Parent = parent
+
+    label(row, text, 11, UDim2.fromOffset(3, 3), C.White)
+
+    local drop = Instance.new("TextButton")
+    drop.Size = UDim2.fromOffset(100, 22)
+    drop.Position = UDim2.new(1, -103, 0, 3)
+    drop.BackgroundColor3 = C.Element
+    drop.Text = value .. "   ⌄"
+    drop.TextColor3 = C.Gray
+    drop.TextSize = 10
+    drop.Font = Enum.Font.Gotham
+    drop.Parent = row
+    corner(drop, 6)
+
+    local index = table.find(options, value) or 1
+
+    drop.Activated:Connect(function()
+        index = index % #options + 1
+        drop.Text = options[index] .. "   ⌄"
+    end)
+
+    return drop
+end
+
+-- SLIDER
+
+local function makeSlider(parent, text, y, value, maxValue)
+    local row = Instance.new("Frame")
+    row.Position = UDim2.fromOffset(8, y)
+    row.Size = UDim2.new(1, -16, 0, 30)
+    row.BackgroundTransparency = 1
+    row.Parent = parent
+
+    label(row, text, 11, UDim2.fromOffset(3, 3), C.White)
+
+    local track = Instance.new("TextButton")
+    track.Size = UDim2.fromOffset(110, 5)
+    track.Position = UDim2.new(1, -120, 0, 13)
+    track.BackgroundColor3 = C.Element
+    track.Text = ""
+    track.Parent = row
+    corner(track, 5)
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(value/maxValue, 0, 1, 0)
+    fill.BackgroundColor3 = C.Blue
+    fill.Parent = track
+    corner(fill, 5)
+
+    local dot = Instance.new("Frame")
+    dot.Size = UDim2.fromOffset(10, 10)
+    dot.Position = UDim2.new(value/maxValue, -5, 0.5, -5)
+    dot.BackgroundColor3 = Color3.new(1,1,1)
+    dot.Parent = track
+    corner(dot, 10)
+
+    local number = Instance.new("TextLabel")
+    number.Size = UDim2.fromOffset(35, 20)
+    number.Position = UDim2.new(1, -39, 0, 0)
+    number.BackgroundColor3 = C.Element
+    number.Text = tostring(value)
+    number.TextColor3 = C.Gray
+    number.TextSize = 9
+    number.Font = Enum.Font.Gotham
+    number.Parent = row
+    corner(number, 5)
+
+    local dragging = false
+
+    local function update(x)
+        local ratio = math.clamp(
+            (x - track.AbsolutePosition.X) /
+            track.AbsoluteSize.X, 0, 1
+        )
+
+        fill.Size = UDim2.new(ratio, 0, 1, 0)
+        dot.Position = UDim2.new(ratio, -5, 0.5, -5)
+
+        local newValue = math.floor(ratio * maxValue * 100) / 100
+        number.Text = tostring(newValue)
+    end
+
+    track.Activated:Connect(function()
+        update(UIS:GetMouseLocation().X)
+    end)
+
+    track.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType ==
+            Enum.UserInputType.MouseMovement then
+            update(input.Position.X)
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+end
+
+-- AIM CARD
+
+makeToggle(aimCard, "aimbot", 5, true)
+makeDropdown(aimCard, "aimbot mode", 35, "Hold", {"Hold", "Toggle"})
+makeToggle(aimCard, "silent aim", 65, true)
+makeDropdown(aimCard, "hitpart", 95, "Head",
+    {"Head", "Torso", "HumanoidRootPart"})
+
+-- FOV CARD
+
+makeToggle(fovCard, "show fov circle", 5, false)
+makeSlider(fovCard, "fov radius", 35, 800, 1000)
+makeToggle(fovCard, "filled circle", 65, false)
+makeSlider(fovCard, "fov opacity", 95, 0.05, 1)
+
+-- TUNING CARD
+
+makeSlider(tuningCard, "smoothness", 5, 5, 100)
+makeSlider(tuningCard, "prediction", 35, 0.135, 1)
+makeSlider(tuningCard, "max range", 65, 250, 1000)
+makeToggle(tuningCard, "wall check", 95, true)
+makeToggle(tuningCard, "forcefield check", 125, true)
+makeToggle(tuningCard, "death check", 155, true)
+
+-- DRAG WINDOW
+
+local dragging = false
+local dragStart
+local startPosition
+
+top.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPosition = main.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(
+            startPosition.X.Scale,
+            startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale,
+            startPosition.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+print("MeguEsmiringhoy GUI loaded!")

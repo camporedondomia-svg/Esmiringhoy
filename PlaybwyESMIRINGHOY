@@ -1,0 +1,1411 @@
+-- Deobfuscated with expertise by neuro.net.
+
+local p = game
+local cloneref = cloneref or function(o) return o end
+local _genv = {}
+local getgenv = getgenv or function() return _genv end
+local tick = tick or os.clock
+
+local Services = {
+    Players = p and p.GetService and cloneref(p:GetService("Players")),
+    RunService = p and p.GetService and cloneref(p:GetService("RunService")),
+    UserInputService = p and p.GetService and cloneref(p:GetService("UserInputService")),
+    ReplicatedStorage = p and p.GetService and cloneref(p:GetService("ReplicatedStorage")),
+    SoundService = p and p.GetService and cloneref(p:GetService("SoundService")),
+    TweenService = p and p.GetService and cloneref(p:GetService("TweenService")),
+    Lighting = p and p.GetService and cloneref(p:GetService("Lighting"))
+}
+
+if Services.Players and typeof(getgenv().Players) ~= "Instance" then getgenv().Players = Services.Players end
+if Services.Players and Services.Players.LocalPlayer and typeof(getgenv().LocalPlayer) ~= "Instance" then getgenv().LocalPlayer = Services.Players.LocalPlayer end
+if Services.RunService and typeof(getgenv().RunService) ~= "Instance" then getgenv().RunService = Services.RunService end
+if Services.UserInputService and typeof(getgenv().UserInputService) ~= "Instance" then getgenv().UserInputService = Services.UserInputService end
+if Services.ReplicatedStorage and typeof(getgenv().ReplicatedStorage) ~= "Instance" then getgenv().ReplicatedStorage = Services.ReplicatedStorage end
+if Services.SoundService and typeof(getgenv().SoundService) ~= "Instance" then getgenv().SoundService = Services.SoundService end
+if Services.TweenService and typeof(getgenv().TweenService) ~= "Instance" then getgenv().TweenService = Services.TweenService end
+if Services.Lighting and typeof(getgenv().Lighting) ~= "Instance" then getgenv().Lighting = Services.Lighting end
+if Services.Lighting and typeof(getgenv().WV_Lighting) ~= "Instance" then getgenv().WV_Lighting = Services.Lighting end
+
+local dummy_conn = { Disconnect = function() end }
+local dummy_signal = { Connect = function() return dummy_conn end, Wait = function() return nil end }
+local dummy_player = {
+    Character = nil,
+    CharacterAdded = dummy_signal,
+    CharacterRemoving = dummy_signal,
+    Name = "LocalPlayer",
+    UserId = 0
+}
+
+if typeof(getgenv().LocalPlayer) ~= "Instance" then
+    getgenv().LocalPlayer = (Services.Players and Services.Players.LocalPlayer) or dummy_player
+end
+
+if Services.Players and not Services.Players.LocalPlayer then
+    task.spawn(function()
+        pcall(function()
+            local pl = Services.Players
+            local lp = pl.LocalPlayer or (pl:GetPropertyChangedSignal("LocalPlayer"):Wait() and pl.LocalPlayer)
+            if lp then getgenv().LocalPlayer = lp end
+        end)
+    end)
+end
+
+if typeof(getgenv().WV_Settings) ~= "table" then
+    getgenv().WV_Settings = {
+        LightingMode = false,
+        LightingType = "shadowmap",
+        WorldTime = false,
+        WorldTimeHour = 4.5,
+        Atmosphere = false,
+        AtmosphereColor = Color3.fromRGB(255, 255, 255),
+        AtmosphereDecay = Color3.fromRGB(120, 120, 120),
+        AtmosphereHaze = 1,
+        AtmosphereGlare = 10,
+        AtmosphereOffset = 0,
+        AtmosphereDensity = 0.35,
+        Textures = false,
+        TexturePack = "minecraft",
+        Ambient = false,
+        AmbientColor = Color3.fromRGB(128, 128, 128),
+        OutdoorColor = Color3.fromRGB(128, 128, 128),
+        Weather = false,
+        WeatherColor = Color3.fromRGB(255, 255, 255),
+        WeatherType = "rain",
+        WeatherRate = 100,
+        Skybox = false,
+        SkyboxType = "realistic"
+    }
+end
+
+local X = setmetatable({}, {
+    __index = function(t, k)
+        if k == 19 or k == 36 or k == 48 or k == 68 or k == 100 or k == 127 or k == 136 then
+            return getgenv().RunService or Services.RunService
+        end
+        if k == 34 then return getgenv().Players or Services.Players end
+        if k == 8 or k == 35 or k == 82 or k == 227 then return getgenv().LocalPlayer or (Services.Players and Services.Players.LocalPlayer) end
+        if k == 37 then return getgenv().UserInputService or Services.UserInputService end
+        return rawget(t, k)
+    end
+})
+
+local Config = {
+    LastRespawnTime = tick(),
+    Unloaded = false,
+    Legit = {},
+    ForceHit = {},
+    Desync = {},
+    Misc = {},
+    UI = {},
+    Services = {},
+    IsHooking = false
+}
+
+local N = {
+    Aq = function(self, n)
+        n = n % 4294967296
+        if n ~= n then return 0 end
+        return n - n % 1
+    end,
+    Yq = function(self, t)
+        return table.unpack(t, 1, t.n or #t)
+    end,
+    jq = function(self, tbl, offset, ...)
+        local args = table.pack(...)
+        for i = 1, args.n do
+            tbl[offset + i] = args[i]
+        end
+    end,
+    pq = function(self, tbl, offset, pack_t)
+        for i = 1, pack_t.n do
+            tbl[offset + i] = pack_t[i]
+        end
+        tbl.n = offset + pack_t.n
+    end,
+    fq = function(...)
+        return function(...) end
+    end
+}
+
+task.spawn(function()task.wait(2)
+    local S=type(PolSec_SendWebhook)=="function"and type(PolSec_Sanitize)=="function"
+    if S then local S=84817806
+        local a=S
+        local v
+        v,S=pcall,N:Aq(bit32.band(171192355,a)+bit32.band(171192355,366838965)+(bit32.band(3952582586,(bit32.bor(a,366838965)))+bit32.band(171192356,(bit32.bxor(a,366838965)))))
+        v(function()local S={}
+            local a=p
+            local v,H=a:GetService("Players").LocalPlayer
+            local a=nil
+            local w={}
+            w.username="NeverLarp // PolSec"
+            local H,E,R=a,w
+            S[1]=(string.format("**Script Executed Successfully!**\n\226\128\162 **User:** `%s`\n\226\128\162 **Discord ID:** `%s`\n\226\128\162 **Key Note:** `%s`\n\226\128\162 **Country:** `%s`",v.Name,"%PolSec_Discord_Id%","%PolSec_Key_Note%","%PolSec_Country_Code%"))
+            E.content=S[1]
+            H(E)
+        end)
+    else print("[PolSec] Script running in un-obfuscated environment (PolSec API unavailable).")
+    end
+end)
+Config.Services = {
+    Players = p:GetService("Players"),
+    RunService = p:GetService("RunService"),
+    UserInputService = p:GetService("UserInputService"),
+    ReplicatedStorage = p:GetService("ReplicatedStorage"),
+    SoundService = p:GetService("SoundService"),
+    TweenService = p:GetService("TweenService"),
+    Lighting = p:GetService("Lighting")
+}
+
+Config.LocalPlayer = Config.Services.Players.LocalPlayer
+getgenv().Players = Config.Services.Players
+getgenv().LocalPlayer = Config.LocalPlayer
+getgenv().RunService = Config.Services.RunService
+getgenv().UserInputService = Config.Services.UserInputService
+getgenv().ReplicatedStorage = Config.Services.ReplicatedStorage
+getgenv().SoundService = Config.Services.SoundService
+getgenv().LocalPlayer = Config.LocalPlayer
+X[7]=p
+X[6]="Players"
+X[267]={}
+X[268]=X[6]
+N:jq(X[267],0,X[7]:GetService(X[268]).LocalPlayer,function(S)getgenv().LastRespawnTime=tick()
+    local w=getgenv().FakePosToggleEnabled
+    if w then task.wait(0.2)
+        local w=S and S:FindFirstChild("HumanoidRootPart")
+        if w then getgenv().FakePosServerPos=w.Position
+        end
+    end
+end)
+X[267].n=2
+X[9],X[10]=X[267][1],X[267][2]
+X[9].CharacterAdded:Connect(X[10])
+X[7]=nil
+X[269]=getgenv()
+X[7]=p
+X[269].NeverLose = (loadstring(p:HttpGet("https://files.catbox.moe/rit3mp.luau"))())
+getgenv().Notification=getgenv().NeverLose:CreateNotification()
+getgenv().Logging=getgenv().NeverLose:CreateLogger()
+getgenv().Indicator=getgenv().NeverLose:CreateIndicator()
+X[7]=p
+X[271]="UserInputService"
+X[10]=(X[7]:GetService(X[271]))
+X[9]=getgenv
+X[6]=function(S)local w={}
+    local P=typeof(S)=="EnumItem"
+    if P then return S
+    else local P=typeof(S)=="string"
+        if P then local P=353340517
+            local a=P
+            local v=S:lower()
+            local H={}
+            H.m1="MouseButton1"
+            H.m2="MouseButton2"
+            local E,R=v,H
+            P=N:Aq(a+13841323)
+            w[1]="MouseButton3"
+            R.m3=w[1]
+            w[2]="MouseButton1"
+            R.mb1=w[2]
+            w[3]="MouseButton2"
+            R.mb2=w[3]
+            w[4]="MouseButton3"
+            R.mb3=w[4]
+            w[5]="MouseButton1"
+            R.m1b=w[5]
+            w[6]="MouseButton2"
+            R.m2b=w[6]
+            w[7]="MouseButton2"
+            R.rclick=w[7]
+            w[8]="MouseButton1"
+            R.lclick=w[8]
+            a=R[E]
+            P=N:Aq(P+206797439)
+            if a then return Enum.UserInputType[R[E]]
+            end
+            local w=S:gsub("Enum.KeyCode.",""):gsub("Enum.UserInputType.","")
+            a,R=pcall(function()return Enum.KeyCode[w]
+            end)
+            if a and R then return R
+            end
+            a,R=pcall(function()return Enum.UserInputType[w]
+            end)
+            if a and R then return R
+            end
+        end
+    end
+    return nil
+end
+X[272]=X[9]()
+X[272].parseKey=X[6]
+X[6]=X[10].TouchEnabled and not X[10].KeyboardEnabled and not X[10].MouseEnabled and getgenv().NeverLose.Scales.Mobile or getgenv().NeverLose.Scales.Large
+X[11]=function(S)local w={}
+    local P="NLAssets"
+    if not isfolder(P)then makefolder(P)
+    end
+    getgenv().getCatboxAsset = X[11]
+    local w=S:gsub("[^%w]","")..".png"
+    local a=P.."/"..w
+    P=not isfile(a)
+    if P then local P=161246003
+        w=P
+        local v
+        v,P=pcall,N:Aq(w+338046949)
+        local w,P=v(function()local H,E=p,S.."?nocache="..tostring(math.random(1,100000))
+            return H:HttpGet(E)
+        end)
+        v=w and P and not P:find("404")and not P:find("Not Found")
+        if v then writefile(a,P)
+        end
+    end
+    if isfile(a)then return getcustomasset(a)
+    end
+    return nil
+end
+X[7]=(X[11]("https://raw.githubusercontent.com/4lpaca-pin/NeverLose/main/assets/logo.png"))
+X[10]=(getgenv())
+X[9]=getgenv().NeverLose
+X[273]={}
+X[274]={}
+X[274].Logo=X[7]or getgenv().NeverLose.GlobalLogo
+X[274].Name="NeverLarp"
+N:jq(X[273],0,X[274],p,"MarketplaceService",p)
+X[273].n=4
+X[12],X[13],X[14],X[15]=X[273][1],X[273][2],X[273][3],X[273][4]
+X[275]=X[14]
+X[12].Content = X[13]:GetService(X[275]):GetProductInfo(X[15].PlaceId).Name
+X[12].Size=X[6]
+X[12].Enable3DRenderer=false
+X[12].Keybind = "RightControl"
+X[278]=X[12]
+X[10].window = (X[9]:CreateWindow(X[278]))
+X[280]={}
+N:jq(X[280],0,getgenv().window.TopLogoDecorator)
+X[280].n=1
+X[16]=X[280][1]
+getgenv().DecoratorSize=getgenv().DecoratorSize or 120
+getgenv().DecoratorX=getgenv().DecoratorX or 340
+getgenv().DecoratorY=getgenv().DecoratorY or 0
+getgenv().DecoratorVisible=getgenv().DecoratorVisible~=false
+getgenv().DecoratorAnimation=nil
+getgenv().CurrentDecoratorName=nil
+(function()local S={}
+    if X[16]then X[16].Size = (UDim2.fromOffset(getgenv().DecoratorSize,getgenv().DecoratorSize))
+        X[16].Position = (UDim2.new(0.5,getgenv().DecoratorX,0,getgenv().DecoratorY))
+        X[16].Visible = getgenv().DecoratorVisible
+        S[7]=X[16]
+        S[7].ZIndex=50
+    end
+end)()
+do local S={d=getgenv().window.TopLogoDecorator}
+    X[281]={}
+    X[282]={}
+    X[282].type="static"
+    X[282].url="https://files.catbox.moe/h80mc4.png"
+    X[282].size=120
+    X[282].x=340
+    X[282].y=0
+    X[281].animegirl=X[282]
+    X[284]="sitting dude"
+    X[283]={}
+    X[283].type="static"
+    X[283].url="https://files.catbox.moe/4c50gu.png"
+    X[283].size=210
+    X[283].x=257
+    X[283].y=80
+    X[281][X[284]]=X[283]
+    X[286]="Linux"
+    X[285]={}
+    X[285].type="gif"
+    X[285].fps=5
+    X[285].size=150
+    X[285].x=340
+    X[285].y=5
+    local w,P,a,v,H,E,R,x,q=X[281],X[286],X[285],{},"https://files.catbox.moe/lnnmut.png","https://files.catbox.moe/etwx15.png","https://files.catbox.moe/zxd3w4.png","https://files.catbox.moe/etwx15.png","https://files.catbox.moe/lnnmut.png"
+    N:jq(v,0,H,E,R,x,q)
+    a.frames=v
+    w[P]=a
+    X[287]="Charizard"
+    X[288]={}
+    X[288].type="spritesheet"
+    X[288].url="https://files.catbox.moe/ujwejs.png"
+    X[288].size=120
+    X[288].x=340
+    X[288].y=0
+    X[288].fps=22
+    X[288].sheetWidth=1040
+    X[288].sheetHeight=910
+    X[288].frameWidth=130
+    X[288].columns=8
+    X[288].totalFrames=51
+    w[X[287]] = X[288]
+    S.list=w
+    getgenv().DecoratorSize=getgenv().DecoratorSize or 120
+    getgenv().DecoratorX=getgenv().DecoratorX or 340
+    getgenv().DecoratorY=getgenv().DecoratorY or 0
+    getgenv().DecoratorVisible=getgenv().DecoratorVisible~=false
+    getgenv().DecoratorAnimation=nil
+    getgenv().CurrentDecoratorName=nil
+    local function w()if S.d then S.d.Size=UDim2.fromOffset(getgenv().DecoratorSize,getgenv().DecoratorSize)
+            S.d.Position=UDim2.new(0.5,getgenv().DecoratorX,0,getgenv().DecoratorY)
+            S.d.Visible=getgenv().DecoratorVisible
+            S.d.ZIndex=50
+        end
+    end
+    w()
+    local function P()if getgenv().DecoratorAnimation then task.cancel(getgenv().DecoratorAnimation)
+            getgenv().DecoratorAnimation=nil
+        end
+        local a=S.d
+        if a then local a=S.d:FindFirstChild("DecoratorSheet")
+            if a then a.Visible=false
+            end
+        end
+    end
+    local function a(v)local H={}
+        local E=S.list[v]
+        if not E then return
+        end
+        if getgenv().CurrentDecoratorName==v and getgenv().DecoratorAnimation then return
+        end
+        P()
+        getgenv().CurrentDecoratorName=v
+        getgenv().DecoratorSize=E.size
+        getgenv().DecoratorX=E.x
+        getgenv().DecoratorY=E.y
+        w()
+        local P,R=S.d and S.d:FindFirstChild("DecoratorSheet"),E.type=="static"
+        if R then local R=508706544
+            if P then P.Visible=false
+            end
+            R=N:Aq(R+231691481)
+            if S.d then S.d.ImageTransparency=0
+                S.d.ImageRectSize=Vector2.zero
+                S.d.ImageRectOffset=Vector2.zero
+                S.d.ClipsDescendants=false
+            end
+            local x
+            x,R=task,N:Aq(R+257116422)
+            x.spawn(function()local R=X[11](E.url)
+                if R and S.d and getgenv().CurrentDecoratorName==v then S.d.Image=R
+                    S.d.Visible=getgenv().DecoratorVisible
+                end
+            end)
+        else local R=E.type=="gif"
+            if R then if P then P.Visible=false
+                end
+                if S.d then S.d.ImageTransparency=0
+                    S.d.ImageRectSize=Vector2.zero
+                    S.d.ImageRectOffset=Vector2.zero
+                    S.d.ClipsDescendants=false
+                end
+                getgenv().DecoratorAnimation=task.spawn(function()local P={}
+                    for R,x in ipairs(E.frames)do local q=X[11](x)
+                    if q then table.insert(P,q)
+                    if R==1 and S.d then S.d.Image=q
+                    S.d.Visible=getgenv().DecoratorVisible
+                end
+            end
+        end
+        if#P==0 then return
+        end
+        local R=1/E.fps
+        while true do for x,x in ipairs(P)do if S.d then S.d.Image=x
+                end
+                task.wait(R)
+            end
+        end
+    end)
+else local P=E.type=="spritesheet"
+    if P then local P=136732480
+        P=bit32.bxor(P,504358396)
+        local R=S.d
+        P=bit32.bxor(P,175335514)
+        if R then S.d.Image = ""
+            S.d.ImageTransparency=1
+            S.d.ClipsDescendants=true
+            S.d.ImageRectSize=Vector2.zero
+            S.d.ImageRectOffset=Vector2.zero
+        end
+        getgenv().DecoratorAnimation=task.spawn(function()local P={}
+            local H=X[11](E.url)
+            if not H or not S.d or getgenv().CurrentDecoratorName~=v then return
+            end
+            local v=S.d:FindFirstChild("DecoratorSheet")
+            local R=not v
+            if R then v=(Instance.new("ImageLabel"))
+                P[1]="DecoratorSheet"
+                v.Name=P[1]
+                v.BackgroundTransparency=1
+                v.BorderSizePixel=0
+                v.ResampleMode=Enum.ResamplerMode.Pixelated
+                v.ScaleType=Enum.ScaleType.Stretch
+                v.Parent=S.d
+            end
+            v.Image=H
+            v.Visible=getgenv().DecoratorVisible
+            R=E.size/E.frameWidth
+            v.Size=UDim2.fromOffset(E.sheetWidth*R,E.sheetHeight*R)
+            R,H=1/E.fps,0
+            while true do local P,x=H%E.columns,math.floor(H/E.columns)
+                v.Position=UDim2.fromOffset(-P*E.size,-x*E.size)
+                H=(H+1)%E.totalFrames
+                task.wait(R)
+            end
+        end)
+    end
+end
+end
+end
+X[15]=(getgenv().window.UserSettings:AddLabel("decorator"))
+X[15]:AddToggle({
+    Default = true,
+    Flag = "Menu_Decorator_Enabled",
+    Callback = function(P)getgenv().DecoratorVisible=P
+        w()
+        local v=S.d and S.d:FindFirstChild("DecoratorSheet")
+        local S=v and getgenv().CurrentDecoratorName=="Charizard"
+        if S then v.Visible=P
+        end
+    end,
+})
+X[9]=(X[15]:AddOption(1))
+X[291]="image"
+X[293]=X[9]:AddLabel(X[291])
+X[292]={}
+X[292].Default="Linux"
+local S,P,v,H,E,R,x=X[293],X[292],{},"animegirl","sitting dude","Linux","Charizard"
+N:jq(v,0,H,E,R,x)
+P.Values=v
+P.Flag = "Menu_Decorator_Selection"
+P.Callback=function(v)a(v)
+end
+S:AddDropdown(P)
+task.spawn(function()task.wait(0.1)
+    a("Linux")
+    w()
+end)
+end
+getgenv().Watermark=getgenv().window:Watermark()
+getgenv().KeybindHUDVisible=getgenv().KeybindHUDVisible~=false
+getgenv().SetKeybindHUDVisible=function(S)getgenv().KeybindHUDVisible=S
+    if getgenv().KeybindsDisplayGui then getgenv().KeybindsDisplayGui.Enabled=S
+    end
+    if getgenv().KeybindGui then getgenv().KeybindGui.Enabled=S
+    end
+end
+if getgenv().KeybindsDisplayGui then pcall(function()getgenv().KeybindsDisplayGui:Destroy()
+    end)
+    getgenv().KeybindsDisplayGui=nil
+end
+X[295]=getgenv()
+X[295].KeybindsDisplayGui = (Instance.new("ScreenGui"))
+X[297]=getgenv().KeybindsDisplayGui
+X[297].Name = "NL_DesktopKeybindsHUD"
+X[299]=getgenv().KeybindsDisplayGui
+X[299].ResetOnSpawn=false
+getgenv().KeybindsDisplayGui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+getgenv().KeybindsDisplayGui.Enabled=getgenv().KeybindHUDVisible
+getgenv().KB_ParentSuccess,_=pcall(function()local S={}
+    local w
+    S[1]=getgenv().KeybindsDisplayGui
+    w=p
+    S[2]=(p:GetService("CoreGui"))
+    S[1].Parent=S[2]
+end)
+X[12]=not getgenv().KB_ParentSuccess
+if X[12]then X[300]=getgenv().KeybindsDisplayGui
+    X[300].Parent = (getgenv().LocalPlayer:WaitForChild("PlayerGui"))
+end
+X[302]=getgenv()
+X[302].KB_MainCard = (Instance.new("Frame"))
+X[304]=getgenv().KB_MainCard
+X[304].Name = "KeybindsCard"
+getgenv().KB_MainCard.Size=UDim2.new(0,180,0,28)
+X[13]=(getgenv())
+X[306]=X[13].KB_MainCard
+X[306].Position = (UDim2.new(0.04,0,0.45,0))
+getgenv().KB_MainCard.BackgroundColor3=Color3.fromRGB(11,12,16)
+getgenv().KB_MainCard.BackgroundTransparency=0.08
+getgenv().KB_MainCard.BorderSizePixel=0
+getgenv().KB_MainCard.ClipsDescendants=true
+getgenv().KB_MainCard.Parent=getgenv().KeybindsDisplayGui
+X[12]=(Instance.new("UICorner",getgenv().KB_MainCard))
+X[12].CornerRadius = (UDim.new(0,7))
+X[6]=(Instance.new("UIStroke",getgenv().KB_MainCard))
+X[6].Color = (Color3.fromRGB(32,34,44))
+X[6].Thickness=1.1
+X[6].Transparency=0.3
+X[13]=(Instance.new("Frame",getgenv().KB_MainCard))
+X[13].Name = "HeaderBar"
+X[13].Size = (UDim2.new(1,0,0,27))
+X[13].Position = (UDim2.new(0,0,0,0))
+X[13].BackgroundTransparency=1
+X[13].BorderSizePixel=0
+X[14]=(Instance.new("TextLabel",X[13]))
+X[14].Name = "Title"
+X[12]=nil
+X[12]=UDim2
+X[14].Size = (X[12].new(1,-20,1,0))
+X[14].Position = (UDim2.new(0,10,0,0))
+X[14].BackgroundTransparency=1
+X[14].Text = "keybinds"
+X[14].TextColor3 = (Color3.fromRGB(220,222,230))
+X[14].TextSize=11
+X[14].Font = Enum.Font.GothamBold
+X[14].TextXAlignment = Enum.TextXAlignment.Left
+X[14]=(Instance.new("Frame",getgenv().KB_MainCard))
+X[14].Name = "WhiteSeparator"
+X[14].Size = (UDim2.new(1,-16,0,1))
+X[14].Position = (UDim2.new(0,8,0,27))
+X[14].BackgroundColor3 = (Color3.fromRGB(255,255,255))
+X[14].BackgroundTransparency=0.9
+X[14].BorderSizePixel=0
+X[324]=getgenv()
+X[324].KB_RowsHolder = (Instance.new("Frame",getgenv().KB_MainCard))
+X[326]=getgenv().KB_RowsHolder
+X[326].Name = "RowsHolder"
+getgenv().KB_RowsHolder.Size=UDim2.new(1,0,1,-29)
+X[7]=nil
+X[15]=nil
+X[7]=getgenv().KB_RowsHolder
+X[15]=UDim2
+X[7].Position = (X[15].new(0,0,0,29))
+getgenv().KB_RowsHolder.BackgroundTransparency=1
+X[7]=(Instance.new("UIPadding",getgenv().KB_RowsHolder))
+X[7].PaddingLeft = (UDim.new(0,10))
+X[7].PaddingRight = (UDim.new(0,10))
+X[7].PaddingTop = (UDim.new(0,5))
+X[7].PaddingBottom = (UDim.new(0,5))
+X[333]=getgenv()
+X[333].KB_RowsLayout = (Instance.new("UIListLayout",getgenv().KB_RowsHolder))
+getgenv().KB_RowsLayout.Padding=UDim.new(0,3)
+getgenv().KB_RowsLayout.SortOrder=Enum.SortOrder.LayoutOrder
+getgenv().KB_IsDragging=false
+getgenv().KB_DragStart=nil
+getgenv().KB_StartPos=nil
+getgenv().KB_DragInput=nil
+X[17]=function(S)if S.UserInputType==Enum.UserInputType.MouseButton1 or S.UserInputType==Enum.UserInputType.Touch then local w=61026661
+        local P=w
+        getgenv().KB_IsDragging=true
+        getgenv().KB_DragStart=S.Position
+        local a=getgenv()
+        w=N:Aq(bit32.band(316011589,P)+bit32.band(316011589,185185618)+(bit32.band(3978955708,(bit32.bor(P,185185618)))+bit32.band(3978955706,(bit32.band(P,185185618)))))
+        P=getgenv().KB_MainCard
+        w=bit32.bxor(w,46362623)
+        a.KB_StartPos=P.Position
+        local function w()if S.UserInputState==Enum.UserInputState.End then getgenv().KB_IsDragging=false
+            end
+        end
+        S.Changed:Connect(w)
+    end
+end
+X[13].InputBegan:Connect(X[17])
+X[18]=function(S)if S.UserInputType==Enum.UserInputType.MouseMovement or S.UserInputType==Enum.UserInputType.Touch then getgenv().KB_DragInput=S
+    end
+end
+X[13].InputChanged:Connect(X[18])
+X[15]=getgenv
+X[13]=X[15]().UserInputService
+X[6]=function(S)if S==getgenv().KB_DragInput and getgenv().KB_IsDragging then local w=S.Position-getgenv().KB_DragStart
+        getgenv().KB_MainCard.Position=UDim2.new(getgenv().KB_StartPos.X.Scale,getgenv().KB_StartPos.X.Offset+w.X,getgenv().KB_StartPos.Y.Scale,getgenv().KB_StartPos.Y.Offset+w.Y)
+    end
+end
+X[13].InputChanged:Connect(X[6])
+Config.TrackedKeybinds={}
+X[336]=(getgenv())
+N:jq(Config.TrackedKeybinds,0,X[336],{})
+X[337]={}
+X[337].Name="Force hit"
+X[337].GetKey=function()local S=Config.ForceHit and Config.ForceHit.Key
+    local w=S and(typeof(S)=="EnumItem"and S.Name or tostring(S))
+    S=w or "C"
+    return S
+end
+X[337].IsActive=function()return Config.ForceHit and Config.ForceHit.Enabled and Config.ForceHit.Active
+end
+N:jq(Config.TrackedKeybinds,2,X[337])
+X[338]={}
+X[338].Name="Flashback"
+X[338].GetKey=function()return "Auto"
+end
+X[338].IsActive=function()return getgenv().FlashbackConfig and getgenv().FlashbackConfig.Enabled
+end
+N:jq(Config.TrackedKeybinds,3,X[338])
+X[339]={}
+X[339].Name="Target strafe"
+X[339].GetKey=function()local S=Config.ForceHit and Config.ForceHit.StrafeKey
+    local w=S and(typeof(S)=="EnumItem"and S.Name or tostring(S))
+    S=w or "N"
+    return S
+end
+X[339].IsActive=function()return Config.ForceHit and Config.ForceHit.StrafeEnabled
+end
+N:jq(Config.TrackedKeybinds,4,X[339])
+X[340]={}
+X[340].Name="Aimbot"
+X[340].GetKey=function()local S=Config.Legit and Config.Legit.AimbotKey
+    local w=S and(typeof(S)=="EnumItem"and S.Name or tostring(S))
+    S=w or "F"
+    return S
+end
+X[340].IsActive=function()return Config.Legit and Config.Legit.AimbotEnabled and Config.Legit.AimbotActive
+end
+N:jq(Config.TrackedKeybinds,5,X[340])
+X[341]={}
+X[341].Name="Desync"
+X[341].GetKey=function()local S=getgenv().Des_Keybind
+    local w=S and(typeof(S)=="EnumItem"and S.Name or tostring(S))
+    S=w or "V"
+    return S
+end
+X[341].IsActive=function()return Config.Desync and Config.Desync.enabled
+end
+N:jq(Config.TrackedKeybinds,6,X[341])
+X[342]={}
+X[342].Name="Glue"
+X[342].GetKey=function()local S=getgenv().GlueKey
+    local w=S and(typeof(S)=="EnumItem"and S.Name or tostring(S))
+    S=w or "G"
+    return S
+end
+X[342].IsActive=function()return getgenv().glue_active==true
+end
+N:jq(Config.TrackedKeybinds,7,X[342])
+X[343]={}
+X[343].Name="CFrame speed"
+X[343].GetKey=function()local S=Config.Misc and Config.Misc.CFrameSpeedKey
+    local w=S and(typeof(S)=="EnumItem"and S.Name or tostring(S))
+    S=w or "None"
+    return S
+end
+X[343].IsActive=function()return Config.Misc and Config.Misc.CFrameSpeedEnabled and Config.Misc.CFrameSpeedActive
+end
+N:jq(Config.TrackedKeybinds,8,X[343])
+X[344]={}
+X[344].Name="CFrame fly"
+X[344].GetKey=function()local S=Config.Misc and Config.Misc.CFrameFlyKey
+    local w=S and(typeof(S)=="EnumItem"and S.Name or tostring(S))
+    S=w or "None"
+    return S
+end
+X[344].IsActive=function()return Config.Misc and Config.Misc.CFrameFlyEnabled and Config.Misc.CFrameFlyActive
+end
+N:jq(Config.TrackedKeybinds,9,X[344])
+X[345]={}
+X[345].Name="WalkSpeed"
+X[345].GetKey=function()local S=Config.Misc and Config.Misc.WalkSpeedKey
+    local w=S and(typeof(S)=="EnumItem"and S.Name or tostring(S))
+    S=w or "None"
+    return S
+end
+X[345].IsActive=function()return Config.Misc and Config.Misc.WalkSpeedEnabled and Config.Misc.WalkSpeedActive
+end
+N:jq(Config.TrackedKeybinds,10,X[345])
+X[346]={}
+X[346].Name="Kill aura"
+X[346].GetKey=function()return "Auto"
+end
+X[346].IsActive=function()return getgenv().KillAura and getgenv().KillAura.Enabled
+end
+N:jq(Config.TrackedKeybinds,11,X[346])
+X[347]={}
+X[347].Name="Fake pos"
+X[347].GetKey=function()local S=getgenv().FakePosKey
+    local w=S and(typeof(S)=="EnumItem"and S.Name or tostring(S))
+    S=w or "None"
+    return S
+end
+X[347].IsActive=function()return getgenv().PhysicsRepDesyncEnabled==true
+end
+N:jq(Config.TrackedKeybinds,12,X[347])
+Config.TrackedKeybinds.n=13
+X[19],X[20],X[21],X[22],X[23],X[24],X[25],X[26],X[27],X[28],X[29],X[30],X[31]=Config.TrackedKeybinds[1],Config.TrackedKeybinds[2],Config.TrackedKeybinds[3],Config.TrackedKeybinds[4],Config.TrackedKeybinds[5],Config.TrackedKeybinds[6],Config.TrackedKeybinds[7],Config.TrackedKeybinds[8],Config.TrackedKeybinds[9],Config.TrackedKeybinds[10],Config.TrackedKeybinds[11],Config.TrackedKeybinds[12],Config.TrackedKeybinds[13]
+N:jq(X[20],0,X[21],X[22],X[23],X[24],X[25],X[26],X[27],X[28],X[29],X[30],X[31])
+X[19].KB_TrackedFeatures=X[20]
+getgenv().KB_RowInstances={}
+X[14]=getgenv
+X[28]=function(S)local w={}
+    local P=Instance.new("Frame")
+    w[1]="Row_"..S.Name
+    P.Name=w[1]
+    P.Size=UDim2.new(1,0,0,16)
+    P.BackgroundTransparency=1
+    P.Visible=false
+    P.Parent=getgenv().KB_RowsHolder
+    local a=Instance.new("TextLabel",P)
+    w[2]="NameLabel"
+    a.Name=w[2]
+    a.Size=UDim2.new(0.65,0,1,0)
+    a.Position=UDim2.new(0,0,0,0)
+    a.BackgroundTransparency=1
+    a.Text=S.Name
+    a.Font=Enum.Font.GothamMedium
+    a.TextSize=11
+    a.TextColor3=Color3.fromRGB(200,202,212)
+    a.TextXAlignment=Enum.TextXAlignment.Left
+    local v=Instance.new("TextLabel",P)
+    w[3]="StatusLabel"
+    v.Name=w[3]
+    v.Size=UDim2.new(0.35,0,1,0)
+    v.Position=UDim2.new(0.65,0,0,0)
+    v.BackgroundTransparency=1
+    v.Font=Enum.Font.GothamMedium
+    v.TextSize=11
+    w[4]="["..S.GetKey().."]"
+    v.Text=w[4]
+    v.TextColor3=Color3.fromRGB(130,134,146)
+    v.TextXAlignment=Enum.TextXAlignment.Right
+    getgenv().KB_RowInstances[S.Name]={Frame=P,NameLabel=a,StatusLabel=v}
+end
+X[348]=X[14]()
+X[348].createKeybindRow=X[28]
+for S,S in ipairs(getgenv().KB_TrackedFeatures)do getgenv().createKeybindRow(S)
+end
+task.spawn(function()local S={}
+    while task.wait(0.04)do if getgenv().Unloaded then if getgenv().KeybindsDisplayGui then getgenv().KeybindsDisplayGui:Destroy()
+            end
+            break
+        end
+        local w,P,a=ipairs,getgenv().KB_TrackedFeatures,0
+        for v,H in w(P)do v=getgenv().KB_RowInstances[H.Name]
+            if v then local E=45181779
+                local R=E
+                local x=false
+                local q=N:Aq(a)
+                E=N:Aq(bit32.band(321341559,4294967295)+R+(bit32.band(3582116556,q)+bit32.band(3582116556,(bit32.bnot(q)))))
+                R=nil
+                R,E=pcall,N:Aq(E-164653314)
+                R(function()x=H.IsActive()
+                end)
+                if x then a+=1
+                    v.StatusLabel.Text = "["..H.GetKey().."]"
+                    v.Frame.Visible=true
+                else v.Frame.Visible=false
+                end
+            end
+        end
+        w,P=a==0 and 28 or 34+a*19,p
+        local S,a=P:GetService("TweenService"),getgenv
+        local v,H,E=a().KB_MainCard,TweenInfo.new,Enum
+        a,P=E.EasingStyle.Quad,Enum.EasingDirection
+        local E,R=H(0.12,a,P.Out),{}
+        R.Size=UDim2.new(0,180,0,w)
+        S:Create(v,E,R):Play()
+    end
+end)
+X[349]=getgenv()
+X[349].UITogg = (getgenv().Watermark:AddBlock("cube-vertexes","neverlose"))
+X[21]=(getgenv())
+X[25]=function()getgenv().window:ToggleInterface()
+end
+X[21].UITogg:Input(X[25])
+X[351]={}
+X[351].AimbotEnabled=false
+X[351].AimbotActive=false
+X[351].AimbotKey=Enum.KeyCode.F
+X[351].KeyMode="Hold"
+X[351].SilentAimEnabled=false
+X[351].HitPart="Head"
+X[351].Smoothness=5
+X[351].Prediction=0.135
+X[351].WallCheck=true
+X[351].ForceFieldCheck=true
+X[351].DeathCheck=true
+X[351].MaxDistance=250
+X[351].FovRadius=100
+X[351].FovVisible=false
+X[351].FovColor=Color3.fromRGB(255,255,255)
+X[351].FovFilled=false
+X[351].FovTransparency=0.5
+Config.Legit = X[351]
+Config.Camera = workspace.CurrentCamera
+Config.Players = getgenv().Players
+Config.LocalPlayer = getgenv().LocalPlayer
+Config.RunService = getgenv().RunService
+Config.UserInputService = getgenv().UserInputService
+getgenv().Players = getgenv().Players
+getgenv().LocalPlayer = getgenv().LocalPlayer
+X[36] = getgenv().RunService
+getgenv().UserInputService = getgenv().UserInputService
+Config.FovCircle = Drawing.new("Circle")
+Config.FovCircle.Thickness = 1
+Config.FovCircle.NumSides = 64
+Config.FovCircle.Filled = false
+Config.WallCheck=function(S,w)local P=getgenv().LocalPlayer.Character
+    if not P then return false
+    end
+    local a=P:FindFirstChild("Head")
+    if not a then return false
+    end
+    local v,H=RaycastParams.new(),{P}
+    if w then table.insert(H,w)
+    end
+    local E,R=ipairs,table.pack(workspace:GetChildren())
+    for x,x in E(table.unpack(R))do P=x.Name=="hit_cham"or x.Name:find("HitEffect")
+        if P then table.insert(H,x)
+        end
+    end
+    v.FilterDescendantsInstances=H
+    v.FilterType=Enum.RaycastFilterType.Exclude
+    v.IgnoreWater=true
+    R=a.Position+workspace.CurrentCamera.CFrame.LookVector*1.5
+    H=workspace:Raycast(R,S-R,v)
+    if not H then return true
+    end
+    E=H.Instance
+    if E then R=(H.Instance:FindFirstAncestorOfClass("Model"))
+        if R==w or R and getgenv().Players:GetPlayerFromCharacter(R)then return true
+        end
+        v=H.Instance:FindFirstAncestor("hit_cham")or H.Instance.Parent and H.Instance.Parent.Name:find("HitEffect")
+        if v then return true
+        end
+    end
+    return false
+end
+X[24]=getgenv
+X[20]=function()local S=273490454
+    local w=S
+    local P,a,v={},ipairs,getgenv().Players
+    S=N:Aq(bit32.band(492137355,w)+bit32.band(4294967295,138283397)+(bit32.band(2,(bit32.bor(w,138283397)))+(bit32.band(3802829940,4294967295)+bit32.band(492137356,(bit32.bnot(w))))))
+    w=table.pack(v:GetPlayers())
+    S=bit32.bxor(S,216236183)
+    for S,H in a(table.unpack(w))do v=H~=getgenv().LocalPlayer
+        if v then S=H.DisplayName.." (@"..H.Name..")"
+            table.insert(P,S)
+        end
+    end
+    table.sort(P,function(S,w)return S:lower()<w:lower()
+    end)
+    return P
+end
+X[359]=X[24]()
+X[359].getPlayerNames=X[20]
+X[7]=getgenv
+X[6]=function(S)if not S then return nil
+    end
+    local w=S:match("@([^%)]+)")
+    if w then return getgenv().Players:FindFirstChild(w)
+    end
+    return getgenv().Players:FindFirstChild(S)
+end
+X[360]=X[7]()
+X[360].getPlayerFromLabel=X[6]
+Config.GetClosestLegitTarget=function()local S,w,P,a=getgenv().UserInputService:GetMouseLocation(),Config.Legit.FovRadius,ipairs,table.pack(getgenv().Players:GetPlayers())
+    local v
+    for H,E in P(table.unpack(a))do H=E~=getgenv().LocalPlayer and E.Character
+        if H then local P,a=E.Character,Config.Legit.DeathCheck
+            if a then local H=P:FindFirstChildOfClass("Humanoid")
+                if not H or H.Health<=0 then continue
+                end
+                H=(P:FindFirstChild("BodyEffects"))
+                local R=H and H:FindFirstChild("K.O")and H["K.O"].Value
+                if R then continue
+                end
+            end
+            a=Config.Legit.ForceFieldCheck and P:FindFirstChildOfClass("ForceField")
+            if a then continue
+            end
+            a=(P:FindFirstChild(Config.Legit.HitPart))
+            if a then local H=getgenv().LocalPlayer.Character and getgenv().LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if H and(H.Position-a.Position).Magnitude>Config.Legit.MaxDistance then continue
+                end
+                local R,x=Config.Camera:WorldToViewportPoint(a.Position)
+                if x then if Config.Legit.WallCheck and not Config.WallCheck(a.Position,P)then continue
+                end
+                H=(Vector2.new(R.X,R.Y)-S).Magnitude
+                if H<w then w,v=H,E
+                end
+            end
+        end
+    end
+end
+return v
+end
+Config.UpdateLegitAimbot=function()local S={}
+    Config.FovCircle.Visible = Config.Legit.FovVisible
+    Config.FovCircle.Radius = Config.Legit.FovRadius
+    Config.FovCircle.Color = Config.Legit.FovColor
+    Config.FovCircle.Position = (getgenv().UserInputService:GetMouseLocation())
+    Config.FovCircle.Transparency = Config.Legit.FovTransparency
+    Config.FovCircle.Filled = Config.Legit.FovFilled
+    if Config.Legit.AimbotEnabled or Config.Legit.SilentAimEnabled then S[13]=(Config.GetClosestLegitTarget())
+        CurrentLegitTarget=S[13]
+    else CurrentLegitTarget=nil
+    end
+    local w=Config.Legit.AimbotEnabled and Config.Legit.AimbotActive
+    if w then local w=Config.GetClosestLegitTarget()
+        local P=w and w.Character
+        if P then local P,a=w.Character:FindFirstChild(Config.Legit.HitPart),w.Character:FindFirstChildOfClass("Humanoid")
+            if P and a then local w=P.AssemblyLinearVelocity
+                local a=P.Position+w*Config.Legit.Prediction
+                w=(CFrame.lookAt(Config.Camera.CFrame.Position,a))
+                Config.Camera.CFrame = (Config.Camera.CFrame:Lerp(w,1/Config.Legit.Smoothness))
+            end
+        end
+    end
+end
+getgenv().RunService.RenderStepped:Connect(Config.UpdateLegitAimbot)
+Config.AimbotInputBegan=function(S,w)local P={}
+    if not S.KeyCode or S.KeyCode==Enum.KeyCode.Unknown or S.KeyCode==Enum.KeyCode.None then return
+    end
+    if w and not(Config.Legit.AimbotKey==Enum.UserInputType.MouseButton1 or Config.Legit.AimbotKey==Enum.UserInputType.MouseButton2)then return
+    end
+    w=S.KeyCode==Config.Legit.AimbotKey or S.UserInputType==Config.Legit.AimbotKey
+    if w then S=Config.Legit.AimbotEnabled
+        if S then local S,w=Config.Legit.KeyMode,"Toggle"
+            if S==w then Config.Legit.AimbotActive = not Config.Legit.AimbotActive
+            else                 Config.Legit.AimbotActive = true
+            end
+        end
+    end
+end
+getgenv().UserInputService.InputBegan:Connect(X[42])
+Config.AimbotInputEnded=function(S)local w={}
+    local P=S.KeyCode==Config.Legit.AimbotKey or S.UserInputType==Config.Legit.AimbotKey
+    if P then local S,P=Config.Legit.KeyMode,"Hold"
+        if S==P then             Config.Legit.AimbotActive = false
+        end
+    end
+end
+getgenv().UserInputService.InputEnded:Connect(X[43])
+Config.IsHooking = false
+X[362]=table.pack(pcall(function()local S={}
+    local w=274405206
+    local P=w
+    local a=hookmetamethod
+    w=N:Aq(P+63381960)
+    local P,v,H=p,"__index",newcclosure
+    w=N:Aq(w+231219159)
+    local function w(E,R)local x=Config.IsHooking
+        if x then local q=Config.OldIndex
+            return q(E,R)
+        end
+        x=checkcaller()
+        if x then local q=Config.OldIndex
+            return q(E,R)
+        end
+        x=R=="Hit"or R=="Target"
+        if x then local q=typeof(E)=="Instance"
+            if q then Config.IsHooking=true
+                local q,q,L=p,pcall(p.IsA,E,"Mouse")
+                local Y=q and L and Config.Legit and Config.Legit.SilentAimEnabled
+                if Y then L=CurrentLegitTarget
+                    q=L and L.Character
+                    if q then local q=L.Character:FindFirstChild(Config.Legit.HitPart)
+                    if q then local L=R=="Hit"
+                    if L then local L=q.AssemblyLinearVelocity or q.Velocity or Vector3.new(0,0,0)
+                    local Y=q.CFrame+L*Config.Legit.Prediction
+                    Config.IsHooking=false
+                    return Y
+                else local L=R=="Target"
+                    if L then Config.IsHooking=false
+                    return q
+                end
+            end
+        end
+    end
+end
+Config.IsHooking=false
+end
+end
+x=Config.OldIndex
+return x(E,R)
+end
+S[1]=(a(P,v,H(w)))
+Config.OldIndex=S[1]
+end))
+X[36]=X[362][1]
+X[43]=X[362][2]
+X[27]=not X[36]
+if X[27]then warn("Failed to hook __index:",X[43])
+end
+X[364]=getgenv().window
+X[363]={}
+X[363].Icon="L"
+X[363].Name="Legit"
+Config.LegitTab = (X[364]:AddTab(X[363]))
+X[367]=Config.LegitTab
+X[366]={}
+X[366].Name="aimbot & silent"
+X[366].Position="left"
+Config.LegitAimbotSection = (X[367]:AddSection(X[366]))
+X[370]=Config.LegitTab
+X[369]={}
+X[369].Name="checks & tuning"
+X[369].Position="left"
+Config.LegitChecksSection = (X[370]:AddSection(X[369]))
+X[373]=Config.LegitTab
+X[372]={}
+X[372].Name="fov visualizer"
+X[372].Position="right"
+Config.LegitFovSection = (X[373]:AddSection(X[372]))
+Config.Legit_aim_lbl = (Config.LegitAimbotSection:AddLabel("aimbot"))
+Config.Legit_aim_lbl:AddToggle({
+    Default = false,
+    Flag = "Legit_AimbotEnabled",
+    Callback = function(S)local w={}
+            Config.Legit.AimbotEnabled = S
+        if not S then         Config.Legit.AimbotActive = false
+        end
+    end,
+})
+Config.Legit_aim_lbl:AddKeybind({
+    Default = "F",
+    Flag = "Legit_AimbotKey",
+    Callback = function(S)local w={}
+        local P=getgenv().parseKey(S)
+        if P then         Config.Legit.AimbotKey = P
+        end
+    end,
+})
+Config.Legit_keymode_lbl = (Config.LegitAimbotSection:AddLabel("aimbot mode"))
+Config.Legit_keymode_lbl:AddDropdown({
+    Default = "Hold",
+    Values = { "Hold","Toggle" },
+    Flag = "Legit_KeyMode",
+    Callback = function(S)local w={}
+        Config.Legit.KeyMode = S
+        Config.Legit.AimbotActive = false
+end
+})
+Config.Legit_silent_lbl = (Config.LegitAimbotSection:AddLabel("silent aim"))
+Config.Legit_silent_lbl:AddToggle({
+    Default = false,
+    Flag = "Legit_SilentAimEnabled",
+    Callback = function(S)local w={}
+            Config.Legit.SilentAimEnabled = S
+    end,
+})
+Config.Legit_hitpart_lbl = (Config.LegitAimbotSection:AddLabel("hitpart"))
+Config.Legit_hitpart_lbl:AddDropdown({
+    Default = "Head",
+    Values = { "Head","HumanoidRootPart","UpperTorso","LowerTorso" },
+    Flag = "Legit_HitPart",
+    Callback = function(S)local w={}
+        Config.Legit.HitPart = S
+end
+})
+Config.Legit_smooth_lbl = (Config.LegitChecksSection:AddLabel("smoothness"))
+Config.Legit_smooth_lbl:AddSlider({
+    Min = 1,
+    Max = 30,
+    Rounding = 0,
+    Default = 5,
+    Flag = "Legit_Smoothness",
+    Callback = function(S)local w={}
+            Config.Legit.Smoothness = S
+    end,
+})
+Config.Legit_pred_lbl = (Config.LegitChecksSection:AddLabel("prediction"))
+Config.Legit_pred_lbl:AddSlider({
+    Min = 0.01,
+    Max = 0.3,
+    Rounding = 3,
+    Default = 0.135,
+    Flag = "Legit_Prediction",
+    Callback = function(S)local w={}
+            Config.Legit.Prediction = S
+    end,
+})
+Config.Legit_maxdist_lbl = (Config.LegitChecksSection:AddLabel("max range"))
+Config.Legit_maxdist_lbl:AddSlider({
+    Min = 50,
+    Max = 1000,
+    Rounding = 0,
+    Default = 250,
+    Flag = "Legit_MaxDistance",
+    Callback = function(S)local w={}
+            Config.Legit.MaxDistance = S
+    end,
+})
+Config.Legit_wall_lbl = (Config.LegitChecksSection:AddLabel("wall check"))
+Config.Legit_wall_lbl:AddToggle({
+    Default = true,
+    Flag = "Legit_WallCheck",
+    Callback = function(S)local w={}
+            Config.Legit.WallCheck = S
+    end,
+})
+Config.Legit_ff_lbl = (Config.LegitChecksSection:AddLabel("forcefield check"))
+Config.Legit_ff_lbl:AddToggle({
+    Default = true,
+    Flag = "Legit_FFCheck",
+    Callback = function(S)local w={}
+            Config.Legit.ForceFieldCheck = S
+    end,
+})
+Config.Legit_death_lbl = (Config.LegitChecksSection:AddLabel("death check"))
+Config.Legit_death_lbl:AddToggle({
+    Default = true,
+    Flag = "Legit_DeathCheck",
+    Callback = function(S)local w={}
+            Config.Legit.DeathCheck = S
+    end,
+})
+Config.Legit_fov_lbl = (Config.LegitFovSection:AddLabel("show fov circle"))
+Config.Legit_fov_lbl:AddToggle({
+    Default = false,
+    Flag = "Legit_FovVisible",
+    Callback = function(S)local w={}
+            Config.Legit.FovVisible = S
+    end,
+})
+Config.Legit_fov_lbl:AddColorPicker({
+    Default = Color3.fromRGB(255,255,255),
+    Flag = "Legit_FovColor",
+    Callback = function(S)local w={}
+            Config.Legit.FovColor = S
+    end,
+})
+Config.Legit_fovrad_lbl = (Config.LegitFovSection:AddLabel("fov radius"))
+Config.Legit_fovrad_lbl:AddSlider({
+    Min = 10,
+    Max = 800,
+    Rounding = 0,
+    Default = 100,
+    Flag = "Legit_FovRadius",
+    Callback = function(S)local w={}
+            Config.Legit.FovRadius = S
+    end,
+})
+Config.Legit_fovfilled_lbl = (Config.LegitFovSection:AddLabel("filled circle"))
+Config.Legit_fovfilled_lbl:AddToggle({
+    Default = false,
+    Flag = "Legit_FovFilled",
+    Callback = function(S)local w={}
+            Config.Legit.FovFilled = S
+    end,
+})
+Config.Legit_fovtrans_lbl = (Config.LegitFovSection:AddLabel("fov opacity"))
+Config.Legit_fovtrans_lbl:AddSlider({
+    Min = 0.05,
+    Max = 1,
+    Rounding = 2,
+    Default = 0.5,
+    Flag = "Legit_FovTransparency",
+    Callback = function(S)local w={}
+            Config.Legit.FovTransparency = S
+    end,
+})
+X[425]=getgenv()
+X[427]=getgenv().window
+X[426]={}
+X[426].Icon="R"
+X[426].Name="RageBot"
+X[425].CombatTab = (X[427]:AddTab(X[426]))
+X[429]=getgenv()
+X[431]=getgenv().CombatTab
+X[430]={}
+X[430].Name="Combat"
+X[430].Icon="crosshairs"
+X[429].Combat_MainSubTab = (X[431]:AddSubTab(X[430]))
+X[433]=getgenv()
+X[435]=getgenv().CombatTab
+X[434]={}
+X[434].Name="Visuals & Audio"
+X[434].Icon="eye"
+X[433].Combat_VisualsSubTab = (X[435]:AddSubTab(X[434]))
+X[438]=getgenv().Combat_MainSubTab
+X[437]={}
+X[437].Name="forcehit"
+X[437].Position="left"
+X[437].LayoutOrder=1
+Config.ForceHitSection = (X[438]:AddSection(X[437]))
+X[440]=getgenv()
+X[442]=getgenv().Combat_MainSubTab
+X[441]={}
+X[441].Name="strafe"
+X[441].Position="left"
+X[441].LayoutOrder=2
+X[440].StrafeSection = (X[442]:AddSection(X[441]))
+X[444]=getgenv()
+X[446]=getgenv().Combat_MainSubTab
+X[445]={}
+X[445].Name="checks"
+X[445].Position="right"
+X[445].LayoutOrder=1
+X[444].ChecksSection = (X[446]:AddSection(X[445]))
+X[448]=getgenv()
+X[450]=getgenv().Combat_MainSubTab
+X[449]={}
+X[449].Name="kill aura"
+X[449].Position="right"
+X[449].LayoutOrder=2
+X[448].KillAuraSection = (X[450]:AddSection(X[449]))
+X[58]=function(S,w)if not S then return
+    end
+    local P=S.Holder or S.Frame or S.Container or S.Instance or S.Main
+    S=P and P:IsA("GuiObject")
+    if S then P.LayoutOrder=w
+    end
+end
+X[58](Config.ForceHitSection,1)
+X[58](getgenv().StrafeSection,2)
+X[58](getgenv().ChecksSection,1)
+X[58](getgenv().KillAuraSection,2)
+X[452]=getgenv()
+X[454]=getgenv().Combat_VisualsSubTab
+X[453]={}
+X[453].Name="target visuals"
+X[453].Position="left"
+X[452].TargetVisualsSection = (X[454]:AddSection(X[453]))
+X[456]=getgenv()
+X[456].ammo_ind_lbl = (getgenv().TargetVisualsSection:AddLabel("ammo counter"))
+X[459]=getgenv().ammo_ind_lbl
+X[459]:AddToggle({
+    Default = true,
+    Flag = "Visuals_ShowAmmo",
+    Callback = function(S)getgenv().AmmoIndicatorConfig.Enabled=S
+    end,
+})
+X[460]=getgenv()
+X[460].ammo_pos_lbl = (getgenv().TargetVisualsSection:AddLabel("ammo position"))
+X[462]={}
+N:jq(X[462],0,getgenv().ammo_pos_lbl)
+X[463]={}
+X[463].Default="Screen Bottom"
+N:jq(X[462],1,X[463],{},"Screen Bottom","Next to Gun")
+X[462].n=5
+X[59],X[60],X[61],X[62],X[63]=X[462][1],X[462][2],X[462][3],X[462][4],X[462][5]
+N:jq(X[61],0,X[62],X[63])
+X[60].Values=X[61]
+X[60].Flag = "Visuals_AmmoPosition"
+X[60].Callback=function(S)getgenv().AmmoIndicatorConfig.Position=S
+end
+X[465]=X[60]
+X[59]:AddDropdown(X[465])
+X[466]=getgenv()
+X[468]=getgenv().Combat_VisualsSubTab
+X[467]={}
+X[467].Name="hit effects & chams"
+X[467].Position="left"
+X[466].HitEffectsSection = (X[468]:AddSection(X[467]))
+X[470]=getgenv()
+X[472]=getgenv().Combat_VisualsSubTab
+X[471]={}
+X[471].Name="bullet tracers"
+X[471].Position="right"
+X[470].BulletTracersSection = (X[472]:AddSection(X[471]))
+X[474]=getgenv()
+X[476]=getgenv().Combat_VisualsSubTab
+X[475]={}
+X[475].Name="audio & feedback"
+X[475].Position="right"
+X[474].AudioFeedbackSection = (X[476]:AddSection(X[475]))
+X[478]=getgenv()
+X[478].ka_enable_lbl = (getgenv().KillAuraSection:AddLabel("kill aura[BETA]"))
+X[481]=getgenv().ka_enable_lbl
+X[481]:AddToggle({
+    Default = false,
+    Flag = "KA_Enabled",
+    Callback = function(S)getgenv().KillAura.Enabled=S
+    end,
+})
+X[482]=getgenv()
+X[482].ka_visuals_lbl = (getgenv().KillAuraSection:AddLabel("apply forcehit visuals"))
+X[485]=getgenv().ka_visuals_lbl
+X[485]:AddToggle({
+    Default = false,
+    Flag = "KA_ApplyForceHitVisuals",
+    Callback = function(S)getgenv().KillAura.ApplyForceHitVisuals=S
+    end,
+})
+X[486]=getgenv()
+X[486].ka_whitelist_lbl = (getgenv().KillAuraSection:AddLabel("whitelist players"))
+getgenv().ka_whitelist_dropdown=getgenv().ka_whitelist_lbl:AddDropdown({Default={},Multi=true,Values=getgenv().getPlayerNames(),Save=false,Callback=function(S)getgenv().KillAura.Whitelist=S
+end})
+X[489]=getgenv().KillAuraSection:AddLabel("aura range")
+X[488]={}
+X[488].Min=5
+X[488].Max=250
+X[488].Rounding=0
+X[488].Default=50
+X[488].Flag="KA_Range"
+X[488].Callback=function(S)if getgenv().KillAura then getgenv().KillAura.Range=S
+    end
+end
+X[489]:AddSlider(X[488])
+X[490]=getgenv()
+X[490].ka_part_lbl = (getgenv().KillAuraSection:AddLabel("hitpart"))
+X[492]={}
+N:jq(X[492],0,getgenv().ka_part_lbl)
+X[493]={}
+X[493].Default="Head"
+N:jq(X[492],1,X[493],{},"Head","HumanoidRootPart","UpperTorso","LowerTorso")
+X[492].n=7
+X[64],X[65],X[66],X[67],X[68],X[69],X[70]=X[492][1],X[492][2],X[492][3],X[492][4],X[492][5],X[492][6],X[492][7]
+N:jq(X[66],0,X[67],X[68],X[69],X[70])
+X[65].Values=X[66]
+X[65].Flag = "KA_HitPart"
+X[65].Callback=function(S)getgenv().KillAura.HitPart=S
+end
+X[495]=X[65]
+X[64]:AddDropdown(X[495])
+X[496]=getgenv()
+X[496].ka_delay_lbl = (getgenv().KillAuraSection:AddLabel("attack delay"))
+X[499]=getgenv().ka_delay_lbl
+X[499]:AddSlider({
+    Min = 0.01,
+    Max = 1,
+    Rounding = 2,
+    Default = 0.1,
+    Flag = "KA_Delay",
+    Callback = function(S)getgenv().KillAura.Delay=S
+    end,
+})
+X[500]=getgenv()
+X[500].ka_wall_lbl = (getgenv().KillAuraSection:AddLabel("wall check"))
+X[503]=getgenv().ka_wall_lbl
+X[503]:AddToggle({
+    Default = false,
+    Flag = "KA_WallCheck",
+    Callback = function(S)getgenv().KillAura.WallCheck=S
+    end,
+})
+X[504]=getgenv()
+X[504].ka_ff_lbl = (getgenv().KillAuraSection:AddLabel("forcefield check"))
+X[507]=getgenv().ka_ff_lbl
+X[507]:AddToggle({
+    Default = true,
+    Flag = "KA_FFCheck",
+    Callback = function(S)getgenv().KillAura.ForceFieldCheck=S
+    end,
+})
+X[508]=getgenv()
+X[508].ka_death_lbl = (getgenv().KillAuraSection:AddLabel("death check"))
+X[511]=getgenv().ka_death_lbl
+X[511]:AddToggle({
+    Default = true,
+    Flag = "KA_DeathCheck",
+    Callback = function(S)getgenv().KillAura.DeathCheck=S
+    end,
+})
+X[512]=getgenv()
+X[514]=getgenv().window
+X[513]={}
+X[513].Name="KnifeBot"
+X[513].Icon="K"
+X[512].RageTab = (X[514]:AddTab(X[513]))
+X[516]=getgenv()
+X[518]=getgenv().RageTab
+X[517]={}
+X[517].Name="knifebot"
+X[517].Position="left"
+X[516].KnifebotSection = (X[518]:AddSection(X[517]))
+X[520]=getgenv()
+X[522]=getgenv().RageTab
+X[521]={}
+X[521].Name="glue connection"
+X[521].Position="right"
+X[520].GlueSection = (X[522]:AddSection(X[521]))
+X[525]=getgenv().window
+X[524]={}
+X[524].Icon="M"
+X[524].Name="Misc"
+Config.MiscTab = (X[525]:AddTab(X[524]))
+X[528]=Config.MiscTab
+X[527]={}
+X[527].Name="Movement"
+X[527].Icon="person-running"
+Config.Misc_MovementTab = (X[528]:AddSubTab(X[5... (508 KB left)

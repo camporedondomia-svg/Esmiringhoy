@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MoguMogu</title>
+<style>
+  :root{
+    --bg:#08080c; --panel:#0d0d12; --card:#101016; --line:#1a1a22;
+    --text:#d8d8e0; --dim:#7b7b88; --accent:#4f7cff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;user-select:none}
+  body{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    font-family:"Inter","Segoe UI",system-ui,sans-serif;color:var(--text);
+    background:radial-gradient(circle at 30% 20%,#2a2f26,#16181a 60%,#0c0d0e);
+  }
+  .win{
+    width:800px;height:600px;max-width:96vw;max-height:94vh;display:flex;position:absolute;
+    background:var(--bg);border:1px solid #1c1c24;border-radius:12px;overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.7);
+  }
+
+  /* ---------- sidebar ---------- */
+  .side{width:175px;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:12px 6px;cursor:move;flex-shrink:0}
+  .brand{padding:6px 10px 18px}
+  .brand h1{font-size:17px;font-weight:700;color:#fff;letter-spacing:.2px}
+  .brand p{font-size:9px;color:var(--dim);margin-top:2px}
+  .tab{display:flex;align-items:center;gap:14px;height:30px;padding:0 12px;margin-bottom:5px;border-radius:7px;font-size:12.5px;color:var(--dim);cursor:pointer;transition:.15s}
+  .tab b{width:12px;font-weight:600;font-size:12px}
+  .tab:hover{color:var(--text)}
+  .tab.active{background:#15151c;color:#fff}
+  .tab.active b{color:var(--accent)}
+  .sub{margin-left:8px;gap:10px;font-size:12px}
+  .sub svg{width:14px;height:14px;flex-shrink:0}
+  .sub.active svg{color:var(--accent)}
+
+  /* ---------- main ---------- */
+  .main{flex:1;display:flex;flex-direction:column;background:var(--panel);min-width:0}
+  .top{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid var(--line);flex-shrink:0}
+  .cfg{display:flex;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:8px;height:30px}
+  .cfg .ic{width:32px;height:100%;display:grid;place-items:center;color:#cfcfd8;cursor:pointer}
+  .cfg .ic:hover{color:#fff}
+  .cfg select{background-color:transparent;border:0;border-left:1px solid var(--line);color:var(--text);font-size:11.5px;height:100%;padding:0 26px 0 10px;outline:none;cursor:pointer}
+  select{-webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5l3 3 3-3' fill='none' stroke='%23aaa' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 8px center}
+  option{background:#17171e;color:#ddd}
+  .rt{display:flex;align-items:center;gap:4px}
+  #q{width:0;opacity:0;padding:0;border:0;background:var(--card);color:var(--text);font-size:11.5px;height:28px;border-radius:7px;outline:none;transition:.2s;user-select:text}
+  #q.open{width:160px;opacity:1;padding:0 10px;border:1px solid var(--line)}
+  .search{color:#cfcfd8;cursor:pointer;padding:6px}
+  .search:hover{color:#fff}
+
+  .content{flex:1;display:flex;gap:8px;padding:6px 8px 12px;overflow:auto;align-items:flex-start}
+  .col{flex:1;min-width:0}
+  .sec{font-size:10.5px;color:var(--dim);padding:7px 4px 4px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:6px}
+  .row{display:flex;align-items:center;justify-content:space-between;height:30px;padding:0 10px 0 12px;font-size:12px;border-top:1px solid #15151b;gap:8px}
+  .row:first-child{border-top:0}
+  .row .lb{white-space:nowrap;display:flex;align-items:center;gap:6px}
+  .row.btn{cursor:pointer;justify-content:flex-start}
+  .row.btn:hover{background:#14141b}
+  .right{display:flex;align-items:center;gap:7px}
+
+  /* toggle */
+  .tg{width:30px;height:18px;border-radius:9px;background:#17171e;position:relative;cursor:pointer;transition:.18s;flex-shrink:0}
+  .tg::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#8a8a8f;transition:.18s}
+  .tg.on{background:var(--accent)}
+  .tg.on::after{left:14px;background:#fff}
+  .key{font-size:9px;color:var(--dim);background:#1a1a21;border-radius:5px;padding:3px 6px;cursor:pointer;min-width:18px;text-align:center}
+  .key.binding{color:var(--accent);outline:1px solid var(--accent)}
+
+  /* dropdown */
+  .dd{background-color:#17171e;border:1px solid #1c1c24;color:#9a9aa6;font-size:10.5px;border-radius:6px;height:20px;width:102px;padding:0 20px 0 7px;outline:none;cursor:pointer;text-overflow:ellipsis}
+
+  /* slider */
+  .sl{position:relative;width:128px;height:18px;border-radius:5px;background:#17171e;display:flex;align-items:center;cursor:pointer;flex-shrink:0;touch-action:none}
+  .sl .fill{position:absolute;left:0;height:4px;border-radius:2px;background:var(--accent)}
+  .sl .knob{position:absolute;width:9px;height:9px;border-radius:50%;background:#fff;transform:translateX(-50%)}
+  .sl .val{position:absolute;right:6px;font-size:9px;color:#aeaeb9;pointer-events:none}
+
+  /* color swatch */
+  .sw{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;border:0;padding:0;background:none;cursor:pointer;flex-shrink:0}
+  .sw::-webkit-color-swatch-wrapper{padding:0}
+  .sw::-webkit-color-swatch{border:0;border-radius:50%}
+  .sw::-moz-color-swatch{border:0;border-radius:50%}
+
+  .gear{color:#bfbfc8;cursor:pointer;display:grid;place-items:center}
+  .gear:hover{color:#fff}
+  .pv{border-top:1px solid #15151b;padding:14px 0 10px;text-align:center;font-size:11px;font-weight:700;color:#fff;background:#0e0e13}
+  .pvwrap{display:inline-flex;gap:6px;margin:6px 0}
+  .pvhp{width:2px;height:150px;border-radius:1px}
+  .pvbox{position:relative;width:98px;height:150px;border:1px solid #fff;display:grid;place-items:center;background:#1c1c22;overflow:hidden}
+  .pvfill{position:absolute;inset:0}
+  .pvfig{position:relative}
+  .pvdist,.pvtool{font-weight:600}
+  .placeholder{margin:auto;align-self:center;color:var(--dim);font-size:13px}
+  .toast{position:absolute;left:50%;bottom:16px;transform:translate(-50%,10px);background:#1a1a22;border:1px solid #262630;color:#e6e6ee;font-size:11.5px;padding:7px 14px;border-radius:8px;opacity:0;pointer-events:none;transition:.2s}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  ::-webkit-scrollbar{width:0}
+</style>
+</head>
+<body>
+<div class="win" id="win">
+  <div class="side" id="drag">
+    <div class="brand"><h1>MoguMogu</h1><p>Free For All</p></div>
+    <div id="tabs"></div>
+  </div>
+
+  <div class="main">
+    <div class="top" id="topbar">
+      <div class="cfg">
+        <div class="ic" id="saveBtn" title="Save config"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm2 2v5h9V5H7zm5 8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></div>
+        <select id="cfgSel"></select>
+      </div>
+      <div class="rt">
+        <input id="q" placeholder="search options...">
+        <div class="search" id="sBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></div>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const $=(s,e=document)=>e.querySelector(s);
+
+/* =========================================================
+   PAGE DATA
+   ========================================================= */
+const TG=v=>({k:'tg',v}), KEY=v=>({k:'key',v}), COL=(v,n)=>({k:'col',v,n}), GEAR={k:'gear'};
+const DD=(o,v)=>({k:'dd',o,v:v||o[0]});
+const SL=(min,max,s,v)=>({k:'sl',min,max,s,v});
+const BTN={k:'btn'};
+const R=(id,l,...parts)=>({id,l,parts});
+const S=(t,rows,pv)=>({t,rows,pv});
+
+const P={};
+
+P['Legit']=[
+ [
+  S('aimbot & silent',[
+    R('aimbot','aimbot',KEY('F'),TG(true)),
+    R('mode','aimbot mode',DD(['Hold','Toggle','Always'])),
+    R('silent','silent aim',TG(true)),
+    R('hitpart','hitpart',DD(['Head','Torso','Random']))
+  ]),
+  S('checks & tuning',[
+    R('smooth','smoothness',SL(0,50,1,0)),
+    R('predict','prediction',SL(0,0.5,0.005,0.135)),
+    R('range','max range',SL(0,1000,1,250)),
+    R('wall','wall check',TG(true)),
+    R('ff','forcefield check',TG(true)),
+    R('death','death check',TG(true))
+  ])
+ ],
+ [
+  S('fov visualizer',[
+    R('show','show fov circle',COL('#ffffff'),TG(false)),
+    R('rad','fov radius',SL(0,1000,1,800)),
+    R('fill','filled circle',TG(false)),
+    R('op','fov opacity',SL(0,1,0.01,0.05))
+  ])
+ ]
+];
+
+P['RageBot/Combat']=[
+ [
+  S('forcehit',[
+    R('fh','forcehit',KEY('C'),TG(true)),
+    R('wl','whitelist players',DD(['Select'])),
+    R('ac','auto closest',TG(false)),
+    R('cr','closest check range',SL(0,500,1,500)),
+    R('hp','hitpart',DD(['HumanoidRootPart','Head','Torso'])),
+    R('sp','select players',DD(['Select'])),
+    R('refresh','Refresh Player Lists',BTN)
+  ]),
+  S('strafe',[
+    R('stomp','stomp target',TG(true)),
+    R('ts','target strafe',KEY('N'),TG(true)),
+    R('spoof','spoof',TG(true)),
+    R('vis','visualize strafe',TG(true)),
+    R('spd','strafe speed',SL(0,32,1,0)),
+    R('dist','strafe distance',SL(0,20,0.1,3.7)),
+    R('hgt','strafe height',SL(0,60,1,0)),
+    R('mode','strafe mode',DD(['Far Random','Near Random','Orbit']))
+  ])
+ ],
+ [
+  S('checks',[
+    R('wall','wall check',TG(true)),
+    R('ff','forcefield check',TG(true)),
+    R('death','death check',TG(true)),
+    R('pre','prefire',TG(true)),
+    R('pd','prefire delay',SL(0,1,0.01,0.01)),
+    R('umd','use max distance',TG(true)),
+    R('mr','max range',SL(0,250,1,200))
+  ]),
+  S('kill aura',[
+    R('ka','kill aura[BETA]',TG(true)),
+    R('afv','apply forcehit visuals',TG(true)),
+    R('wl','whitelist players',DD(['Select'])),
+    R('ar','aura range',SL(0,330,1,250)),
+    R('hp','hitpart',DD(['Head','Torso','HumanoidRootPart'])),
+    R('ad','attack delay',SL(0,1,0.01,0.01)),
+    R('wall2','wall check',TG(true)),
+    R('ff2','forcefield check',TG(true)),
+    R('death2','death check',TG(true))
+  ])
+ ]
+];
+
+P['RageBot/Visuals & Audio']=[
+ [
+  S('target visuals',[
+    R('ammo','ammo counter',TG(true)),
+    R('apos','ammo position',DD(['Screen Bottom','Screen Top','Near Target'])),
+    R('hud','target hud',COL('#6b7ab8'),TG(true)),
+    R('follow','follow target',TG(false)),
+    R('tracer','target tracer',COL('#ffffff'),TG(true)),
+    R('spec','spectate target',TG(false)),
+    R('circle','Circle around target',COL('#4f7cff'),TG(false))
+  ]),
+  S('hit effects & chams',[
+    R('hc','hit chams',COL('#ffe600'),TG(true)),
+    R('cm','chams material',DD(['neon','ForceField','Glass','Plastic'])),
+    R('ct','chams transparency',SL(0,1,0.05,0)),
+    R('cd','chams duration',SL(0,7,0.1,2.5)),
+    R('ce','chams effect',DD(['fade','pulse','none'])),
+    R('di','damage indicator',COL('#ffe600'),DD(['Phantom Forces','Classic','Minimal']),TG(true)),
+    R('he','hit effects',COL('#ffffff'),TG(true)),
+    R('eod','effects only on death',TG(false)),
+    R('et','effect type',DD(['Blood Splatter','Sparkles','Smoke'])),
+    R('hed','hit effects duration',SL(0,10,0.1,1.5))
+  ])
+ ],
+ [
+  S('bullet tracers',[
+    R('bt','bullet tracers',COL('#ffffff'),TG(true)),
+    R('tt','tracer type',DD(['Default','Beam','Lightning'])),
+    R('tl','tracer lifetime',SL(0,8,0.1,5.5)),
+    R('tw','tracer width',SL(0,5,0.1,0.1))
+  ]),
+  S('audio & feedback',[
+    R('hs','hit sound',TG(true)),
+    R('sp','sound pack',DD(['Sparkles','Bell','Pop','Classic'])),
+    R('vol','volume',SL(0,100,1,50)),
+    R('nt','notifications',TG(true)),
+    R('at','auto toxic',TG(false))
+  ])
+ ]
+];
+
+P['KnifeBot']=[
+ [
+  S('knifebot',[
+    R('hbx','knife hitbox expander',TG(false)),
+    R('hbv','hitbox visualizer',COL('#6b8cff'),TG(false)),
+    R('vs','visualizer style',DD(['Adornment','Box','Outline'])),
+    R('tr','transparency',SL(0,1,0.01,0.65)),
+    R('pulse','pulse effect',TG(true)),
+    R('asw','auto swing knife',TG(false)),
+    R('hgk','hold gun + knife',DD(['[Revolver]','[Pistol]','[SMG]']),TG(false))
+  ])
+ ],
+ [
+  S('glue connection',[
+    R('gc','glue connection',KEY('G'),TG(false)),
+    R('sg','spoof glue',TG(false)),
+    R('stg','stomp glue target',TG(false)),
+    R('ap','attach position',DD(['Back','Front','Top'])),
+    R('vsp','void spam',TG(false)),
+    R('acs','auto calculate knife swing',TG(false)),
+    R('vss','void spam speed',SL(0,5,0.01,0.12)),
+    R('ad','attach distance',SL(0,50,1,3)),
+    R('gr','glue rig',COL('#ff8c00'),TG(false)),
+    R('rt','rig transparency',SL(0,1,0.1,0.5)),
+    R('pi','position indicator',TG(true)),
+    R('tracer','tracer',COL('#ff8c00'),TG(true)),
+    R('sgt','select glue target',DD(['Select']))
+  ])
+ ]
+];
+
+P['Misc/Movement']=[
+ [
+  S('movement',[
+    R('ws','walkspeed',KEY('None'),TG(false)),
+    R('wsv','walkspeed value',SL(0,100,1,16)),
+    R('cs','cframe speed',KEY('None'),TG(false)),
+    R('sm','speed multiplier',SL(0,50,1,2)),
+    R('cf','cframe fly',KEY('None'),TG(false)),
+    R('fs','fly speed',SL(0,500,1,50)),
+    R('njc','no jump cooldown',TG(false)),
+    R('jh','jump height value',SL(0,50,0.1,7.2)),
+    R('spin','spinbot',TG(false)),
+    R('sps','spinbot speed',SL(0,200,1,50)),
+    R('nc','noclip',TG(false))
+  ])
+ ]
+];
+
+P['Misc/Desync']=[
+ [
+  S('desync main',[
+    R('en','enable desync',KEY('V'),TG(false)),
+    R('mode','desync mode',DD(['void','Fake','Underground'])),
+    R('fp','Fake Position',KEY('None'),TG(false)),
+    R('dot','disable on tool',TG(false)),
+    R('vt','void time',SL(0,2,0.1,0.4)),
+    R('rtm','return time',SL(0,1,0.001,0.133))
+  ]),
+  S('custom offsets',[
+    R('ox','offset x',SL(0,20,0.1,0)),
+    R('oy','offset y',SL(0,20,0.1,0)),
+    R('oz','offset z',SL(0,20,0.1,0))
+  ])
+ ],
+ [
+  S('fake position visuals',[
+    R('spt','server pos tracer',COL('#ff7a1a'),TG(false)),
+    R('tth','tracer thickness',SL(0,10,0.1,1.5)),
+    R('to','tracer origin',DD(['center','head','gunstip'])),
+    R('spi','server pos indicator',COL('#ff7a1a'),TG(false))
+  ]),
+  S('desync visuals',[
+    R('rv','rig visualizer',COL('#1e90ff'),TG(false)),
+    R('rtr','rig transparency',SL(0,1,0.1,0.5)),
+    R('dt','desync tracer',COL('#ff1a1a'),TG(false)),
+    R('to2','tracer origin',DD(['gunstip','center','head'])),
+    R('spi2','server pos indicator',TG(false)),
+    R('st','smooth tracking',TG(true))
+  ])
+ ]
+];
+
+P['Misc/Morphs & Anims']=[
+ [
+  S('morphs & accessories',[
+    R('av','avatar changer',DD(['None','Preset 1','Preset 2'])),
+    R('hl','toggle headless',TG(false)),
+    R('kb','toggle korblox',TG(false)),
+    R('ra','Remove Accessories',BTN)
+  ]),
+  S('emotes & lag',[
+    R('ee','enable emote',TG(false)),
+    R('se','select emote',DD(['None','Dance 1','Dance 2'])),
+    R('al','animation lagger',TG(false)),
+    R('ala','animation lag amount',SL(0,100,1,0)),
+    R('es','emote speed',SL(0,10,1,0))
+  ])
+ ],
+ [
+  S('animation customization',[
+    R('is','idle style',DD(['Default','Ninja','Robot','Zombie'])),
+    R('ws','walk style',DD(['Default','Ninja','Robot','Zombie'])),
+    R('rs','run style',DD(['Default','Ninja','Robot','Zombie'])),
+    R('js','jump style',DD(['Default','Ninja','Robot','Zombie'])),
+    R('fs','fall style',DD(['Default','Ninja','Robot','Zombie'])),
+    R('cs','climb style',DD(['Default','Ninja','Robot','Zombie'])),
+    R('ss','swim style',DD(['Default','Ninja','Robot','Zombie']))
+  ]),
+  S('body parts',[
+    R('dl','dick visuals (local player)',TG(false)),
+    R('do','dick visuals (other players)',TG(false))
+  ])
+ ]
+];
+
+P['Misc/Automation']=[
+ [
+  S('misc',[
+    R('asd','auto stomp when on dead body',TG(false)),
+    R('as','anti stomp',TG(false)),
+    R('fr','force reset',KEY('P'),TG(false)),
+    R('fa','fake afk',TG(false)),
+    R('sa','spam afk',TG(false))
+  ]),
+  S('rope',[
+    R('ar','anti rope',TG(false))
+  ])
+ ],
+ [
+  S('spoofing & network',[
+    R('pp','ping spoofer',TG(false)),
+    R('pv','ping value (ms)',SL(0,1000,1,300)),
+    R('ps','platform spoof',DD(['None','Mobile','Console','PC'])),
+    R('rwk','rejoin when kicked',TG(false))
+  ]),
+  S('chat & utility',[
+    R('cs','chat spy',TG(false)),
+    R('cb','custom bubbles',TG(false)),
+    R('arl','auto reload',TG(false))
+  ])
+ ]
+];
+
+P['Visuals/Players Esp']=[
+ [
+  S('player esp',[
+    R('box','box esp',COL('#ffffff'),TG(true)),
+    R('self','show on self',TG(false)),
+    R('fill','filled box',COL('#000000','a'),COL('#ffffff','b'),TG(false)),
+    R('ftr','fill transparency',SL(0,1,0.1,0.3)),
+    R('tem','text esp master',TG(true)),
+    R('names','names',DD(['Display','Username','Both']),COL('#ffffff'),TG(true)),
+    R('dist','distance',COL('#ffffff'),TG(true)),
+    R('tools','equipped tools',COL('#ffffff'),TG(true)),
+    R('hp','health bar',COL('#ff0000','lo'),COL('#ffff00','mid'),COL('#00ff00','hi'),TG(true))
+  ])
+ ],
+ [
+  S('esp preview',[
+    R('prev','enable preview',TG(true)),
+    R('pimg','preview image',DD(['triple t','dummy','silhouette']))
+  ],true)
+ ]
+];
+
+P['Visuals/self visuals']=[
+ [
+  S('self material',[
+    R('sm','self material',COL('#0a84ff'),TG(false)),
+    R('mat','material',DD(['Neon','ForceField','Glass','Plastic'])),
+    R('tr','transparency',SL(0,1,0.05,0))
+  ]),
+  S('particle aura',[
+    R('pa','particle aura',COL('#7fd8ff'),TG(false)),
+    R('at','aura type',DD(['angel','demon','fire']))
+  ]),
+  S('china hat',[
+    R('ch','china hat',COL('#ffffff'),TG(false)),
+    R('fl','filled',TG(false)),
+    R('sp','spin',TG(false)),
+    R('ss','spin speed',SL(0,11,1,10))
+  ])
+ ],
+ [
+  S('gun material',[
+    R('gm','gun material',COL('#ddd35a'),TG(false)),
+    R('mt','material type',DD(['Neon','ForceField','Glass','Plastic']))
+  ]),
+  S('tool aura',[
+    R('ta','tool aura',COL('#ffffff'),TG(false)),
+    R('arm','aura rate multiplier',SL(0,8,0.1,1))
+  ]),
+  S('cursor pet',[
+    R('on','oneko cat',COL('#ffffff'),TG(false)),
+    R('ft','follow target',TG(false)),
+    R('fsp','follow speed',SL(0,500,1,110)),
+    R('fd','follow distance',SL(0,200,1,45))
+  ]),
+  S('charizard cursor',[
+    R('cp','charizard pet',COL('#ffffff'),TG(false)),
+    R('pm','position mode',DD(['Mouse','Center','Follow']))
+  ]),
+  S('crosshair',[
+    R('xh','crosshair',GEAR,COL('#f5f0a0'),TG(false)),
+    R('tx','text',GEAR,COL('#eeeeee'),TG(true)),
+    R('hgc','hide game crosshair',TG(false))
+  ])
+ ]
+];
+
+P['Visuals/World Visuals']=[
+ [
+  S('lighting & time',[
+    R('lm','lighting mode',TG(false)),
+    R('md','mode',DD(['shadowmap','Voxel','Future','Compatibility'])),
+    R('wt','world time',TG(false)),
+    R('hr','hour',SL(0,24,0.5,4.5)),
+    R('amb','ambient',COL('#8a8a8f','a'),COL('#8a8a8f','b'),TG(false))
+  ]),
+  S('atmosphere',[
+    R('atm','atmosphere',COL('#8a8a8f','a'),COL('#ffffff','b'),TG(false)),
+    R('hz','haze',SL(0,10,0.1,1)),
+    R('gl','glare',SL(0,13,0.1,10)),
+    R('of','offset',SL(0,10,0.1,0)),
+    R('dn','density',SL(0,1,0.01,0.35))
+  ])
+ ],
+ [
+  S('weather & skybox',[
+    R('wx','weather',COL('#ffffff'),TG(false)),
+    R('wty','weather type',DD(['rain','snow','storm'])),
+    R('rt','rate',SL(0,110,1,100)),
+    R('sb','skybox',TG(false)),
+    R('sky','sky',DD(['realistic','space','sunset']))
+  ]),
+  S('world textures',[
+    R('tex','textures',TG(false)),
+    R('pk','pack',DD(['minecraft','default','retro'])),
+    R('ffm','forcefield map',COL('#00b0ff'),TG(false)),
+    R('cc','custom color',TG(true)),
+    R('fft','forcefield transparency',SL(0,1,0.01,0))
+  ]),
+  S('rtx',[
+    R('rtx','rtx',COL('#f2d4e0'),TG(false))
+  ])
+ ]
+];
+
+P['Visuals/VoidShoot']=[
+ [
+  S('voidshoot',[
+    R('en','enable voidshoot',TG(false))
+  ])
+ ],
+ []
+];
+
+const PREVIEW=`<div class="pv" id="pv"><div class="pvname">Player</div><div class="pvwrap"><div class="pvhp"></div><div class="pvbox"><div class="pvfill"></div><svg class="pvfig" viewBox="0 0 60 120" width="60" height="120"><circle cx="30" cy="20" r="14" fill="#c98a4b"/><rect x="18" y="36" width="24" height="46" rx="10" fill="#c98a4b"/><rect x="20" y="80" width="8" height="34" rx="4" fill="#b87a3e"/><rect x="32" y="80" width="8" height="34" rx="4" fill="#b87a3e"/><rect x="8" y="40" width="9" height="36" rx="4" fill="#b87a3e"/><rect x="43" y="40" width="9" height="36" rx="4" fill="#b87a3e"/></svg></div></div><div class="pvdist">[15m]</div><div class="pvtool">[Revolver]</div></div>`;
+
+function updatePreview(){
+  const pv=$('#pv'); if(!pv) return;
+  const g=k=>ST['Visuals/Players Esp|'+k];
+  pv.style.display=g('prev.tg')?'':'none';
+  $('.pvbox',pv).style.borderColor=g('box.tg')?g('box.col'):'transparent';
+  const f=$('.pvfill',pv);
+  f.style.background=g('fill.tg')?g('fill.cola'):'transparent';
+  f.style.opacity=1-g('ftr.sl');
+  const master=g('tem.tg');
+  const nm=$('.pvname',pv); nm.style.display=master&&g('names.tg')?'':'none'; nm.style.color=g('names.col');
+  const ds=$('.pvdist',pv); ds.style.display=master&&g('dist.tg')?'':'none'; ds.style.color=g('dist.col');
+  const tl=$('.pvtool',pv); tl.style.display=master&&g('tools.tg')?'':'none'; tl.style.color=g('tools.col');
+  const hp=$('.pvhp',pv); hp.style.visibility=g('hp.tg')?'visible':'hidden';
+  hp.style.background=`linear-gradient(${g('hp.colhi')},${g('hp.colmid')},${g('hp.collo')})`;
+  const opts=['triple t','dummy','silhouette'];
+  $('.pvfig',pv).style.filter=`hue-rotate(${opts.indexOf(g('pimg.dd'))*70}deg)`;
+}
+
+const TABS=[
+  {n:'Legit',k:'L'},
+  {n:'RageBot',k:'R',sub:['Combat','Visuals & Audio']},
+  {n:'KnifeBot',k:'K',dbl:true,sub:['Movement','Desync','Morphs & Anims']},
+  {n:'Misc',k:'M',sub:['Movement','Desync','Morphs & Anims','Automation']},
+  {n:'Visuals',k:'V',sub:['Players Esp','self visuals','World Visuals','VoidShoot']}
+];
+const SUBICON={
+  'VoidShoot':'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M8 5.500V4.500a1.500 1.500 0 1 0-1.500-1.500M8 5.500L14.500 11a1 1 0 0 1-.6 1.800H2.100A1 1 0 0 1 1.500 11L8 5.500z"/></svg>',
+  'Players Esp':'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3C4.5 3 2 6 1 8c1 2 3.5 5 7 5s6-3 7-5c-1-2-3.5-5-7-5zm0 8.2A3.2 3.2 0 1 1 8 4.800a3.200 3.200 0 0 1 0 6.400z"/><circle cx="8" cy="8" r="1.500"/></svg>',
+  'self visuals':'<svg viewBox="0 0 16 16"><text x="8" y="12.5" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor" font-family="sans-serif">H</text></svg>',
+  'World Visuals':'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="2.6"/><path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3"/></svg>',
+  'Movement':'<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="9.5" cy="3" r="1.8"/><path d="M6 6l3-1 2 2.5 2.5.5-.4 1.3-3.1-.6-1-1.2-.8 2.3 2 2V15H8.6v-2.7L7 11l-1.3 3.3-1.4-.6L6 6z"/></svg>',
+  'Desync':'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l5.5 2v4.5c0 3.3-2.3 5.7-5.5 7.5C4.8 13.2 2.5 10.8 2.5 7.5V3L8 1z"/><path d="M5.5 8l1.8 1.8L10.8 6" fill="none" stroke="#15151c" stroke-width="1.4"/></svg>',
+  'Morphs & Anims':'<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="4.5" r="2.7"/><path d="M2.5 14c0-3 2.4-5 5.5-5s5.5 2 5.5 5z"/></svg>',
+  'Automation':'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.3"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4"/></svg>',
+  'Combat':'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><path d="M8 0.5v3M8 12.5v3M0.5 8h3M12.5 8h3"/></svg>',
+  'Visuals & Audio':'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="currentColor"/><circle cx="8" cy="8" r="2.6" fill="#15151c"/></svg>'
+};
+
+/* =========================================================
+   STATE (values, configs)
+   ========================================================= */
+const id_=(page,row,part)=>page+'|'+row.id+'.'+part.k+(part.n||'');
+const DEF={};
+for(const pg in P) P[pg].forEach(c=>c.forEach(s=>s.rows.forEach(r=>r.parts.forEach(p=>{ if(p.k!=='btn'&&p.k!=='gear') DEF[id_(pg,r,p)]=(p.k==='tg'?false:p.k==='sl'?p.min:p.v); }))));
+let ST={...DEF};
+
+const KEYSTORE='mogumogu_configs';
+let store={};
+try{ store=JSON.parse(localStorage.getItem(KEYSTORE)||'{}'); }catch(e){ store={}; }
+const persist=()=>{ try{ localStorage.setItem(KEYSTORE,JSON.stringify(store)); }catch(e){} };
+let curCfg='Default';
+
+function toast(m){
+  const t=$('#toast'); t.textContent=m; t.classList.add('show');
+  clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),1500);
+}
+
+function fillCfgSelect(){
+  const names=['Default',...Object.keys(store)];
+  $('#cfgSel').innerHTML=names.map(n=>`<option ${n===curCfg?'selected':''}>${n}</option>`).join('');
+}
+$('#cfgSel').onchange=e=>{
+  curCfg=e.target.value;
+  ST=curCfg==='Default'?{...DEF}:{...DEF,...store[curCfg]};
+  renderPage(); toast('Loaded '+curCfg);
+};
+$('#saveBtn').onclick=()=>{
+  if(curCfg==='Default'){
+    let n=1; while(store['Config '+n]) n++;
+    curCfg='Config '+n;
+  }
+  store[curCfg]={...ST}; persist(); fillCfgSelect(); toast('Saved '+curCfg);
+};
+
+/* =========================================================
+   RENDERING
+   ========================================================= */
+const decOf=s=>(String(s).split('.')[1]||'').length;
+const fmt=(v,s)=>String(parseFloat(Number(v).toFixed(decOf(s))));
+
+function partHTML(pg,r,p){
+  const id=id_(pg,r,p), v=ST[id];
+  switch(p.k){
+    case 'gear': return `<span class="gear" data-msg="${r.l}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="2.4"/><path d="M8 1.5v2.2M8 12.3v2.2M1.5 8h2.2M12.3 8h2.2M3.4 3.4l1.6 1.6M11 11l1.6 1.6M12.6 3.4L11 5M5 11l-1.6 1.6"/></svg></span>`;
+    case 'key': return `<span class="key" data-id="${id}">${v}</span>`;
+    case 'col': return `<input type="color" class="sw" data-id="${id}" value="${v}">`;
+    case 'tg':  return `<div class="tg ${v?'on':''}" data-id="${id}"></div>`;
+    case 'dd':  return `<select class="dd" data-id="${id}">${p.o.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
+    case 'sl':  return `<div class="sl" data-id="${id}" data-min="${p.min}" data-max="${p.max}" data-step="${p.s}"><div class="fill"></div><div class="knob"></div><span class="val">${fmt(v,p.s)}</span></div>`;
+  }
+  return '';
+}
+function rowHTML(pg,r){
+  if(r.parts[0].k==='btn')
+    return `<div class="row btn" data-msg="${r.l}"><span class="lb"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 1.5L3.5 6 8 10.5"/></svg>${r.l}</span></div>`;
+  return `<div class="row"><span class="lb">${r.l}</span><div class="right">${r.parts.map(p=>partHTML(pg,r,p)).join('')}</div></div>`;
+}
+
+let cur={tab:'Legit',sub:null,open:false};
+const pageKey=()=>cur.sub?(cur.tab==='KnifeBot'?'Misc':cur.tab)+'/'+cur.sub:cur.tab;
+
+function renderTabs(){
+  $('#tabs').innerHTML=TABS.map(t=>{
+    const act=cur.tab===t.n;
+    let h=`<div class="tab ${act?'active':''}" data-tab="${t.n}"><b>${t.k}</b>${t.n}</div>`;
+    if(t.sub && act && (!t.dbl||cur.open)) h+=t.sub.map(s=>`<div class="tab sub ${cur.sub===s?'active':''}" data-tab="${t.n}" data-sub="${s}">${SUBICON[s]||''}${s}</div>`).join('');
+    return h;
+  }).join('');
+}
+
+function setSlider(el){
+  const min=+el.dataset.min,max=+el.dataset.max,step=+el.dataset.step;
+  const v=ST[el.dataset.id], p=(v-min)/(max-min);
+  const left=`calc(${p} * (100% - 12px) + 6px)`;
+  $('.fill',el).style.width=p<=0?'0':left;
+  $('.knob',el).style.left=left;
+  $('.val',el).textContent=fmt(v,step);
+}
+
+function renderPage(){
+  const pg=pageKey(), data=P[pg], c=$('#content');
+  if(!data){ c.innerHTML=`<div class="placeholder">${cur.sub||cur.tab} — empty page</div>`; return; }
+  c.innerHTML=data.map(col=>`<div class="col">${col.map(s=>`<div class="sec">${s.t}</div><div class="box">${s.rows.map(r=>rowHTML(pg,r)).join('')}${s.pv?PREVIEW:''}</div>`).join('')}</div>`).join('');
+  c.querySelectorAll('.sl').forEach(setSlider);
+  c.scrollTop=0;
+  applyFilter();
+  updatePreview();
+}
+
+function render(){ renderTabs(); renderPage(); }
+
+/* =========================================================
+   INTERACTION
+   ========================================================= */
+// tabs
+$('#tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab'); if(!t) return;
+  const def=TABS.find(x=>x.n===t.dataset.tab);
+  const switching=cur.tab!==def.n;
+  if(switching) cur.open=false;
+  if(t.dataset.sub) cur.sub=t.dataset.sub;
+  else if(def.dbl){ if(!switching && cur.sub===null) return; cur.sub=null; }
+  else if(switching) cur.sub=def.sub?def.sub[0]:null;
+  cur.tab=def.n;
+  $('#q').value='';
+  render();
+});
+
+// double-click KnifeBot -> show / hide its sub pages
+$('#tabs').addEventListener('dblclick',e=>{
+  const t=e.target.closest('.tab:not(.sub)'); if(!t) return;
+  const def=TABS.find(x=>x.n===t.dataset.tab); if(!def||!def.dbl) return;
+  cur.tab=def.n; cur.open=!cur.open; if(!cur.open) cur.sub=null;
+  render();
+});
+
+const content=$('#content');
+
+// toggles / keybinds / buttons
+let binding=null;
+content.addEventListener('click',e=>{
+  const tg=e.target.closest('.tg');
+  if(tg){ tg.classList.toggle('on'); ST[tg.dataset.id]=tg.classList.contains('on'); return; }
+  const k=e.target.closest('.key');
+  if(k){
+    if(binding) binding.classList.remove('binding');
+    binding=k; k.classList.add('binding'); k.textContent='...'; return;
+  }
+  const gr=e.target.closest('.gear');
+  if(gr){ toast(gr.dataset.msg+' settings'); return; }
+  const b=e.target.closest('.row.btn');
+  if(b) toast(b.dataset.msg+' clicked');
+});
+addEventListener('keydown',e=>{
+  if(!binding) return;
+  e.preventDefault();
+  const id=binding.dataset.id;
+  if(e.key!=='Escape') ST[id]=e.key.length===1?e.key.toUpperCase():e.key.slice(0,6);
+  binding.textContent=ST[id]; binding.classList.remove('binding'); binding=null;
+});
+addEventListener('pointerdown',e=>{
+  if(binding && !e.target.closest('.key')){ binding.textContent=ST[binding.dataset.id]; binding.classList.remove('binding'); binding=null; }
+});
+
+// dropdowns & colors
+content.addEventListener('change',e=>{
+  if(e.target.matches('select.dd')) ST[e.target.dataset.id]=e.target.value;
+});
+content.addEventListener('input',e=>{
+  if(e.target.matches('input.sw')) ST[e.target.dataset.id]=e.target.value;
+});
+
+// sliders
+content.addEventListener('pointerdown',e=>{
+  const s=e.target.closest('.sl'); if(!s) return;
+  const min=+s.dataset.min,max=+s.dataset.max,step=+s.dataset.step;
+  const move=ev=>{
+    const r=s.getBoundingClientRect();
+    const p=Math.min(1,Math.max(0,(ev.clientX-r.left)/r.width));
+    let v=Math.round((p*(max-min))/step)*step+min;
+    v=parseFloat(v.toFixed(decOf(step)));
+    ST[s.dataset.id]=Math.min(max,Math.max(min,v));
+    setSlider(s);
+  };
+  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up)};
+  move(e);
+  addEventListener('pointermove',move); addEventListener('pointerup',up);
+});
+
+['click','change','input'].forEach(ev=>content.addEventListener(ev,()=>setTimeout(updatePreview,0)));
+
+// search
+function applyFilter(){
+  const q=$('#q').value.trim().toLowerCase();
+  content.querySelectorAll('.box').forEach(box=>{
+    let any=false;
+    box.querySelectorAll('.row').forEach(r=>{
+      const m=!q||r.querySelector('.lb').textContent.toLowerCase().includes(q);
+      r.style.display=m?'':'none'; if(m) any=true;
+    });
+    box.style.display=any?'':'none';
+    if(box.previousElementSibling) box.previousElementSibling.style.display=any?'':'none';
+  });
+}
+$('#sBtn').onclick=()=>{
+  const q=$('#q'); q.classList.toggle('open');
+  if(q.classList.contains('open')) q.focus(); else { q.value=''; applyFilter(); }
+};
+$('#q').oninput=applyFilter;
+
+// drag window
+const win=$('#win');
+let ox,oy,dragging=false;
+const startDrag=e=>{
+  if(e.target.closest('.tab,.cfg,.rt')) return;
+  dragging=true; const r=win.getBoundingClientRect(); ox=e.clientX-r.left; oy=e.clientY-r.top;
+};
+$('#drag').addEventListener('pointerdown',startDrag);
+$('#topbar').addEventListener('pointerdown',startDrag);
+addEventListener('pointermove',e=>{ if(dragging){ win.style.left=e.clientX-ox+'px'; win.style.top=e.clientY-oy+'px'; win.style.margin=0; } });
+addEventListener('pointerup',()=>dragging=false);
+
+fillCfgSelect();
+render();
+</script>
+</body>
+</html>
